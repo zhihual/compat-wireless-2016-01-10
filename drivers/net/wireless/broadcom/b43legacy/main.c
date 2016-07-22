@@ -1379,7 +1379,7 @@ static void b43legacy_interrupt_tasklet(struct b43legacy_wldev *dev)
 		if (b43legacy_using_pio(dev))
 			b43legacy_pio_rx(dev->pio.queue0);
 		else
-			b43legacy_dma_rx(dev->dma.rx_ring0);
+			b43legacy_dma_rx(dev->dma.rx_ring0); // We have packet
 	}
 	B43legacy_WARN_ON(dma_reason[1] & B43legacy_DMAIRQ_RX_DONE);
 	B43legacy_WARN_ON(dma_reason[2] & B43legacy_DMAIRQ_RX_DONE);
@@ -1588,7 +1588,7 @@ static int b43legacy_one_core_attach(struct ssb_device *dev,
 				     struct b43legacy_wl *wl);
 static void b43legacy_one_core_detach(struct ssb_device *dev);
 
-static void b43legacy_request_firmware(struct work_struct *work)
+static void b43legacy_request_firmware(struct work_struct *work)//DD here, we are trying to download firmware..
 {
 	struct b43legacy_wl *wl = container_of(work,
 				  struct b43legacy_wl, firmware_load);
@@ -1632,7 +1632,7 @@ static void b43legacy_request_firmware(struct work_struct *work)
 		default:
 			goto err_no_initvals;
 		}
-		err = do_request_fw(dev, filename, &fw->initvals, false);
+		err = do_request_fw(dev, filename, &fw->initvals, false);//DD FW!!!
 		if (err)
 			goto err_load;
 	}
@@ -1652,11 +1652,11 @@ static void b43legacy_request_firmware(struct work_struct *work)
 		default:
 			goto err_no_initvals;
 		}
-		err = do_request_fw(dev, filename, &fw->initvals_band, false);
+		err = do_request_fw(dev, filename, &fw->initvals_band, false);//DD FW!!! get fw, but looks, not download.... yes. confirm, not download.
 		if (err)
 			goto err_load;
 	}
-	err = ieee80211_register_hw(wl->hw);
+	err = ieee80211_register_hw(wl->hw);//DD 掐指一算，这是要向OS注册啊
 	if (err)
 		goto err_one_core_detach;
 	return;
@@ -1680,7 +1680,7 @@ error:
 	return;
 }
 
-static int b43legacy_upload_microcode(struct b43legacy_wldev *dev)
+static int b43legacy_upload_microcode(struct b43legacy_wldev *dev)//DD en..., this is the realy download fw
 {
 	struct wiphy *wiphy = dev->wl->hw->wiphy;
 	const size_t hdr_len = sizeof(struct b43legacy_fw_header);
@@ -1706,7 +1706,7 @@ static int b43legacy_upload_microcode(struct b43legacy_wldev *dev)
 		b43legacy_shm_write16(dev, B43legacy_SHM_SHARED, i, 0);
 
 	/* Upload Microcode. */
-	data = (__be32 *) (dev->fw.ucode->data + hdr_len);
+	data = (__be32 *) (dev->fw.ucode->data + hdr_len);//DD 1st fw ucode
 	len = (dev->fw.ucode->size - hdr_len) / sizeof(__be32);
 	b43legacy_shm_control_word(dev,
 				   B43legacy_SHM_UCODE |
@@ -1718,7 +1718,7 @@ static int b43legacy_upload_microcode(struct b43legacy_wldev *dev)
 		udelay(10);
 	}
 
-	if (dev->fw.pcm) {
+	if (dev->fw.pcm) { //DD 2st PCM code..
 		/* Upload PCM data. */
 		data = (__be32 *) (dev->fw.pcm->data + hdr_len);
 		len = (dev->fw.pcm->size - hdr_len) / sizeof(__be32);
@@ -2187,23 +2187,23 @@ static int b43legacy_chip_init(struct b43legacy_wldev *dev)
 	if (dev->phy.gmode)
 		macctl |= B43legacy_MACCTL_GMODE;
 	macctl |= B43legacy_MACCTL_INFRA;
-	b43legacy_write32(dev, B43legacy_MMIO_MACCTL, macctl);
+	b43legacy_write32(dev, B43legacy_MMIO_MACCTL, macctl); //DD HW Config
 
-	err = b43legacy_upload_microcode(dev);
+	err = b43legacy_upload_microcode(dev); //DD Yes, download ucode and pcm firmeware..
 	if (err)
 		goto out; /* firmware is released later */
 
-	err = b43legacy_gpio_init(dev);
+	err = b43legacy_gpio_init(dev);//DD GPIO
 	if (err)
 		goto out; /* firmware is released later */
 
-	err = b43legacy_upload_initvals(dev);
+	err = b43legacy_upload_initvals(dev);//DD downlaodn 3rd FW
 	if (err)
 		goto err_gpio_clean;
-	b43legacy_radio_turn_on(dev);
+	b43legacy_radio_turn_on(dev);//DD radio on.
 
 	b43legacy_write16(dev, 0x03E6, 0x0000);
-	err = b43legacy_phy_init(dev);
+	err = b43legacy_phy_init(dev);//DD HW register access. for PHY
 	if (err)
 		goto err_radio_off;
 
@@ -2373,7 +2373,7 @@ static void b43legacy_periodic_tasks_setup(struct b43legacy_wldev *dev)
 	struct delayed_work *work = &dev->periodic_work;
 
 	dev->periodic_state = 0;
-	INIT_DELAYED_WORK(work, b43legacy_periodic_work_handler);
+	INIT_DELAYED_WORK(work, b43legacy_periodic_work_handler); // peroid timer work..
 	ieee80211_queue_delayed_work(dev->wl->hw, work, 0);
 }
 
@@ -2473,7 +2473,7 @@ static int b43legacy_rng_init(struct b43legacy_wl *wl)
 	return err;
 }
 
-static void b43legacy_tx_work(struct work_struct *work)
+static void b43legacy_tx_work(struct work_struct *work) //DD do really tx task
 {
 	struct b43legacy_wl *wl = container_of(work, struct b43legacy_wl,
 				  tx_work);
@@ -2527,11 +2527,11 @@ static void b43legacy_op_tx(struct ieee80211_hw *hw,
 	}
 	B43legacy_WARN_ON(skb_shinfo(skb)->nr_frags);
 
-	skb_queue_tail(&wl->tx_queue[skb->queue_mapping], skb);
+	skb_queue_tail(&wl->tx_queue[skb->queue_mapping], skb); //DD add to queue
 	if (!wl->tx_queue_stopped[skb->queue_mapping])
-		ieee80211_queue_work(wl->hw, &wl->tx_work);
+		ieee80211_queue_work(wl->hw, &wl->tx_work); //DD qoeue one tx work
 	else
-		ieee80211_stop_queue(wl->hw, skb->queue_mapping);
+		ieee80211_stop_queue(wl->hw, skb->queue_mapping); //DD don't understand...
 }
 
 static int b43legacy_op_conf_tx(struct ieee80211_hw *hw,
@@ -3000,7 +3000,7 @@ static int b43legacy_wireless_core_start(struct b43legacy_wldev *dev)
 	b43legacy_set_status(dev, B43legacy_STAT_STARTED);
 
 	/* Start data flow (TX/RX) */
-	b43legacy_mac_enable(dev);
+	b43legacy_mac_enable(dev); //DD mac enable
 	b43legacy_write32(dev, B43legacy_MMIO_GEN_IRQ_MASK, dev->irq_mask);
 
 	/* Start maintenance work */
@@ -3278,7 +3278,7 @@ static void prepare_phy_data_for_init(struct b43legacy_wldev *dev)
 }
 
 /* Initialize a wireless core */
-static int b43legacy_wireless_core_init(struct b43legacy_wldev *dev)
+static int b43legacy_wireless_core_init(struct b43legacy_wldev *dev)//DD attach/detach init/deinit reset... core family
 {
 	struct b43legacy_wl *wl = dev->wl;
 	struct ssb_bus *bus = dev->dev->bus;
@@ -3313,11 +3313,11 @@ static int b43legacy_wireless_core_init(struct b43legacy_wldev *dev)
 		goto err_kfree_lo_control;
 
 	/* Enable IRQ routing to this device. */
-	ssb_pcicore_dev_irqvecs_enable(&bus->pcicore, dev->dev);
+	ssb_pcicore_dev_irqvecs_enable(&bus->pcicore, dev->dev);//DD Enable IRQ
 
 	prepare_phy_data_for_init(dev);
 	b43legacy_phy_calibrate(dev);
-	err = b43legacy_chip_init(dev);
+	err = b43legacy_chip_init(dev);//DD looks firmware download there... after this call, chip alive...
 	if (err)
 		goto err_kfree_tssitbl;
 	b43legacy_shm_write16(dev, B43legacy_SHM_SHARED,
@@ -3353,7 +3353,7 @@ static int b43legacy_wireless_core_init(struct b43legacy_wldev *dev)
 	b43legacy_shm_write16(dev, B43legacy_SHM_SHARED,
 			      B43legacy_SHM_SH_PRMAXTIME, 1);
 
-	b43legacy_rate_memory_init(dev);
+	b43legacy_rate_memory_init(dev);//DD rate upto 54M
 
 	/* Minimum Contention Window */
 	if (phy->type == B43legacy_PHYTYPE_B)
@@ -3370,7 +3370,7 @@ static int b43legacy_wireless_core_init(struct b43legacy_wldev *dev)
 		if (b43legacy_using_pio(dev))
 			err = b43legacy_pio_init(dev);
 		else {
-			err = b43legacy_dma_init(dev);
+			err = b43legacy_dma_init(dev); //DD set RX/TX DMA ring....
 			if (!err)
 				b43legacy_qos_init(dev);
 		}
@@ -3494,14 +3494,14 @@ static int b43legacy_op_start(struct ieee80211_hw *hw)
 	mutex_lock(&wl->mutex);
 
 	if (b43legacy_status(dev) < B43legacy_STAT_INITIALIZED) {
-		err = b43legacy_wireless_core_init(dev);
+		err = b43legacy_wireless_core_init(dev); //DD 开始初始化!!!s
 		if (err)
 			goto out_mutex_unlock;
 		did_init = 1;
 	}
 
 	if (b43legacy_status(dev) < B43legacy_STAT_STARTED) {
-		err = b43legacy_wireless_core_start(dev);
+		err = b43legacy_wireless_core_start(dev);//DD  来start
 		if (err) {
 			if (did_init)
 				b43legacy_wireless_core_exit(dev);
@@ -3509,7 +3509,7 @@ static int b43legacy_op_start(struct ieee80211_hw *hw)
 		}
 	}
 
-	wiphy_rfkill_start_polling(hw->wiphy);
+	wiphy_rfkill_start_polling(hw->wiphy); //DD poll rfkill....
 
 out_mutex_unlock:
 	mutex_unlock(&wl->mutex);
@@ -3562,16 +3562,16 @@ static int b43legacy_op_get_survey(struct ieee80211_hw *hw, int idx,
 	return 0;
 }
 
-static const struct ieee80211_ops b43legacy_hw_ops = {
+static const struct ieee80211_ops b43legacy_hw_ops = {  //DD this is the upper layer interface.... probally for mac80211
 	.tx			= b43legacy_op_tx,
-	.conf_tx		= b43legacy_op_conf_tx,
-	.add_interface		= b43legacy_op_add_interface,
-	.remove_interface	= b43legacy_op_remove_interface,
+	.conf_tx		= b43legacy_op_conf_tx, //DD empty function.
+	.add_interface		= b43legacy_op_add_interface, //DD this is just one function call...
+	.remove_interface	= b43legacy_op_remove_interface,//DD same as add 
 	.config			= b43legacy_op_dev_config,
 	.bss_info_changed	= b43legacy_op_bss_info_changed,
 	.configure_filter	= b43legacy_op_configure_filter,
 	.get_stats		= b43legacy_op_get_stats,
-	.start			= b43legacy_op_start,
+	.start			= b43legacy_op_start, //DD let's star first.
 	.stop			= b43legacy_op_stop,
 	.set_tim		= b43legacy_op_beacon_set_tim,
 	.get_survey		= b43legacy_op_get_survey,
@@ -3668,7 +3668,7 @@ static int b43legacy_wireless_core_attach(struct b43legacy_wldev *dev)
 	 * have that in core_init(), too.
 	 */
 
-	err = ssb_bus_powerup(bus, 0);
+	err = ssb_bus_powerup(bus, 0);//DD en... wake up bus..
 	if (err) {
 		b43legacyerr(wl, "Bus powerup failed\n");
 		goto out;
@@ -3689,9 +3689,9 @@ static int b43legacy_wireless_core_attach(struct b43legacy_wldev *dev)
 	dev->phy.gmode = (have_gphy || have_bphy);
 	dev->phy.radio_on = true;
 	tmp = dev->phy.gmode ? B43legacy_TMSLOW_GMODE : 0;
-	b43legacy_wireless_core_reset(dev, tmp);
+	b43legacy_wireless_core_reset(dev, tmp);//DD en.. reset hw.
 
-	err = b43legacy_phy_versioning(dev);
+	err = b43legacy_phy_versioning(dev);//DD en.. get phy version. hw realted.
 	if (err)
 		goto err_powerdown;
 	/* Check if this device supports multiband. */
@@ -3715,24 +3715,24 @@ static int b43legacy_wireless_core_attach(struct b43legacy_wldev *dev)
 	}
 	dev->phy.gmode = (have_gphy || have_bphy);
 	tmp = dev->phy.gmode ? B43legacy_TMSLOW_GMODE : 0;
-	b43legacy_wireless_core_reset(dev, tmp);
+	b43legacy_wireless_core_reset(dev, tmp);//DD reset with mode again... actually, should ... apply mode.
 
-	err = b43legacy_validate_chipaccess(dev);
+	err = b43legacy_validate_chipaccess(dev);//DD validate chip hw. to make sure bus/soc works as expect.
 	if (err)
 		goto err_powerdown;
-	err = b43legacy_setup_modes(dev, have_bphy, have_gphy);
+	err = b43legacy_setup_modes(dev, have_bphy, have_gphy); //DD set b/g mode..set phy...
 	if (err)
 		goto err_powerdown;
 
 	/* Now set some default "current_dev" */
 	if (!wl->current_dev)
 		wl->current_dev = dev;
-	INIT_WORK(&dev->restart_work, b43legacy_chip_reset);
+	INIT_WORK(&dev->restart_work, b43legacy_chip_reset);//DD make also one workitem for reset...
 
 	b43legacy_radio_turn_off(dev, 1);
 	b43legacy_switch_analog(dev, 0);
 	ssb_device_disable(dev->dev, 0);
-	ssb_bus_may_powerdown(bus);
+	ssb_bus_may_powerdown(bus);//DD why power off ....
 
 out:
 	return err;
@@ -3766,7 +3766,7 @@ static int b43legacy_one_core_attach(struct ssb_device *dev,
 	struct b43legacy_wldev *wldev;
 	int err = -ENOMEM;
 
-	wldev = kzalloc(sizeof(*wldev), GFP_KERNEL);
+	wldev = kzalloc(sizeof(*wldev), GFP_KERNEL); //DD comeon, one new stucture in..
 	if (!wldev)
 		goto out;
 
@@ -3775,20 +3775,20 @@ static int b43legacy_one_core_attach(struct ssb_device *dev,
 	b43legacy_set_status(wldev, B43legacy_STAT_UNINIT);
 	wldev->bad_frames_preempt = modparam_bad_frames_preempt;
 	tasklet_init(&wldev->isr_tasklet,
-		     (void (*)(unsigned long))b43legacy_interrupt_tasklet,
+		     (void (*)(unsigned long))b43legacy_interrupt_tasklet, //DD init interrupt 
 		     (unsigned long)wldev);
 	if (modparam_pio)
-		wldev->__using_pio = true;
+		wldev->__using_pio = true;//DD should not come here.
 	INIT_LIST_HEAD(&wldev->list);
 
-	err = b43legacy_wireless_core_attach(wldev);
+	err = b43legacy_wireless_core_attach(wldev);//DD make tunnel with HW works.,, more important, fill wi_phy
 	if (err)
 		goto err_kfree_wldev;
 
 	list_add(&wldev->list, &wl->devlist);
 	wl->nr_devs++;
 	ssb_set_drvdata(dev, wldev);
-	b43legacy_debugfs_add_device(wldev);
+	b43legacy_debugfs_add_device(wldev);//DD debug...
 out:
 	return err;
 
@@ -3815,17 +3815,17 @@ static void b43legacy_wireless_exit(struct ssb_device *dev,
 	ieee80211_free_hw(hw);
 }
 
-static int b43legacy_wireless_init(struct ssb_device *dev)
+static int b43legacy_wireless_init(struct ssb_device *dev)//DD generally, this fucntion is just allocate structure..
 {
-	struct ssb_sprom *sprom = &dev->bus->sprom;
-	struct ieee80211_hw *hw;
+	struct ssb_sprom *sprom = &dev->bus->sprom; //DD this should be known by bus.
+	struct ieee80211_hw *hw; //DD hw??
 	struct b43legacy_wl *wl;
 	int err = -ENOMEM;
 	int queue_num;
 
-	b43legacy_sprom_fixup(dev->bus);
+	b43legacy_sprom_fixup(dev->bus); //DD haha, give apple an fix up...
 
-	hw = ieee80211_alloc_hw(sizeof(*wl), &b43legacy_hw_ops);
+	hw = ieee80211_alloc_hw(sizeof(*wl), &b43legacy_hw_ops);//DD wow, wl get it's memory hardware hook up...
 	if (!hw) {
 		b43legacyerr(NULL, "Could not allocate ieee80211 device\n");
 		goto out;
@@ -3835,32 +3835,32 @@ static int b43legacy_wireless_init(struct ssb_device *dev)
 	ieee80211_hw_set(hw, RX_INCLUDES_FCS);
 	ieee80211_hw_set(hw, SIGNAL_DBM);
 
-	hw->wiphy->interface_modes =
+	hw->wiphy->interface_modes =    //DD mode...
 		BIT(NL80211_IFTYPE_AP) |
 		BIT(NL80211_IFTYPE_STATION) |
 		BIT(NL80211_IFTYPE_WDS) |
 		BIT(NL80211_IFTYPE_ADHOC);
 	hw->queues = 1; /* FIXME: hardware has more queues */
 	hw->max_rates = 2;
-	SET_IEEE80211_DEV(hw, dev->dev);
+	SET_IEEE80211_DEV(hw, dev->dev); //DD mac...
 	if (is_valid_ether_addr(sprom->et1mac))
 		SET_IEEE80211_PERM_ADDR(hw, sprom->et1mac);
 	else
 		SET_IEEE80211_PERM_ADDR(hw, sprom->il0mac);
 
 	/* Get and initialize struct b43legacy_wl */
-	wl = hw_to_b43legacy_wl(hw);
+	wl = hw_to_b43legacy_wl(hw);//DD get wl address
 	memset(wl, 0, sizeof(*wl));
 	wl->hw = hw;
 	spin_lock_init(&wl->irq_lock);
 	spin_lock_init(&wl->leds_lock);
 	mutex_init(&wl->mutex);
-	INIT_LIST_HEAD(&wl->devlist);
-	INIT_WORK(&wl->beacon_update_trigger, b43legacy_beacon_update_trigger_work);
-	INIT_WORK(&wl->tx_work, b43legacy_tx_work);
+	INIT_LIST_HEAD(&wl->devlist); //DD zero and init them up.
+	INIT_WORK(&wl->beacon_update_trigger, b43legacy_beacon_update_trigger_work);//DD beacon workitem
+	INIT_WORK(&wl->tx_work, b43legacy_tx_work); //DD tx workitem
 
 	/* Initialize queues and flags. */
-	for (queue_num = 0; queue_num < B43legacy_QOS_QUEUE_NUM; queue_num++) {
+	for (queue_num = 0; queue_num < B43legacy_QOS_QUEUE_NUM; queue_num++) {//DD qos qoueue
 		skb_queue_head_init(&wl->tx_queue[queue_num]);
 		wl->tx_queue_stopped[queue_num] = 0;
 	}
@@ -3873,30 +3873,30 @@ out:
 	return err;
 }
 
-static int b43legacy_probe(struct ssb_device *dev,
+static int b43legacy_probe(struct ssb_device *dev, //DD input ssb as this call comes from bus...
 			 const struct ssb_device_id *id)
 {
 	struct b43legacy_wl *wl;
 	int err;
 	int first = 0;
 
-	wl = ssb_get_devtypedata(dev);
-	if (!wl) {
+	wl = ssb_get_devtypedata(dev); //DD should be only one data parameter? or maybe the bus driver allocate wl when compile...
+	if (!wl) { //DD OK, we may get null. so upper comment, is , bus driver don't know. so, no allocate previously.
 		/* Probing the first core - setup common struct b43legacy_wl */
-		first = 1;
+		first = 1; 
 		err = b43legacy_wireless_init(dev);
 		if (err)
 			goto out;
 		wl = ssb_get_devtypedata(dev);
-		B43legacy_WARN_ON(!wl);
+		B43legacy_WARN_ON(!wl); //DD debug code, no function..
 	}
-	err = b43legacy_one_core_attach(dev, wl);
+	err = b43legacy_one_core_attach(dev, wl);//DD update wi_phy data..
 	if (err)
 		goto err_wireless_exit;
 
 	/* setup and start work to load firmware */
-	INIT_WORK(&wl->firmware_load, b43legacy_request_firmware);
-	schedule_work(&wl->firmware_load);
+	INIT_WORK(&wl->firmware_load, b43legacy_request_firmware);//DD call for firmware downloadding.
+	schedule_work(&wl->firmware_load);//DD schedule one.. good job...
 
 out:
 	return err;
@@ -4005,8 +4005,8 @@ out:
 static struct ssb_driver b43legacy_ssb_driver = {
 	.name		= KBUILD_MODNAME,
 	.id_table	= b43legacy_ssb_tbl,
-	.probe		= b43legacy_probe,
-	.remove		= b43legacy_remove,
+	.probe		= b43legacy_probe,  //DD probe, should be called when hw arrival
+	.remove		= b43legacy_remove, //DD called when remove.
 	.suspend	= b43legacy_suspend,
 	.resume		= b43legacy_resume,
 };
@@ -4039,16 +4039,16 @@ static int __init b43legacy_init(void)
 
 	b43legacy_debugfs_init();
 
-	err = ssb_driver_register(&b43legacy_ssb_driver);
+	err = ssb_driver_register(&b43legacy_ssb_driver); //DD register to bus driver...
 	if (err)
 		goto err_dfs_exit;
 
-	b43legacy_print_driverinfo();
+	b43legacy_print_driverinfo();  //DD nothing, just one line print. found in system, b43 b43legacy b44 bgmac all loaded.
 
 	return err;
 
 err_dfs_exit:
-	b43legacy_debugfs_exit();
+	b43legacy_debugfs_exit(); //DD if fail, return 
 	return err;
 }
 
@@ -4058,5 +4058,5 @@ static void __exit b43legacy_exit(void)
 	b43legacy_debugfs_exit();
 }
 
-module_init(b43legacy_init)
-module_exit(b43legacy_exit)
+module_init(b43legacy_init)  //DD this is the driver enter point
+module_exit(b43legacy_exit)  //DD this is the driver exit point

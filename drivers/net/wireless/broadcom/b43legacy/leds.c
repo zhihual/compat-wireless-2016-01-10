@@ -128,7 +128,7 @@ static void b43legacy_unregister_led(struct b43legacy_led *led)
 static void b43legacy_map_led(struct b43legacy_wldev *dev,
 			u8 led_index,
 			enum b43legacy_led_behaviour behaviour,
-			bool activelow)
+			bool activelow)//DD led beheavior....
 {
 	struct ieee80211_hw *hw = dev->wl->hw;
 	char name[B43legacy_LED_MAX_NAME_LEN + 1];

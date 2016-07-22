@@ -1302,7 +1302,7 @@ void b43legacy_dma_handle_txstatus(struct b43legacy_wldev *dev,
 	ieee80211_queue_work(dev->wl->hw, &dev->wl->tx_work);
 }
 
-static void dma_rx(struct b43legacy_dmaring *ring,
+static void dma_rx(struct b43legacy_dmaring *ring,  //DD DMA rx handleing..
 		   int *slot)
 {
 	struct b43legacy_dmadesc32 *desc;
@@ -1382,7 +1382,7 @@ static void dma_rx(struct b43legacy_dmaring *ring,
 	}
 
 	dmaaddr = meta->dmaaddr;
-	err = setup_rx_descbuffer(ring, desc, meta, GFP_ATOMIC);
+	err = setup_rx_descbuffer(ring, desc, meta, GFP_ATOMIC); //DD looks, look, here already return descirptior...
 	if (unlikely(err)) {
 		b43legacydbg(ring->dev->wl, "DMA RX: setup_rx_descbuffer()"
 			     " failed\n");
@@ -1395,7 +1395,7 @@ static void dma_rx(struct b43legacy_dmaring *ring,
 	skb_put(skb, len + ring->frameoffset);
 	skb_pull(skb, ring->frameoffset);
 
-	b43legacy_rx(ring->dev, skb, rxhdr);
+	b43legacy_rx(ring->dev, skb, rxhdr);//DD calling up 
 drop:
 	return;
 }

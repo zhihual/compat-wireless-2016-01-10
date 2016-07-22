@@ -3554,6 +3554,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
  * This is the receive path handler. It is called by a low level driver when an
  * 802.11 MPDU is received from the hardware.
  */
+//DD this is ieee80211_rx
 void ieee80211_rx_napi(struct ieee80211_hw *hw, struct sk_buff *skb,
 		       struct napi_struct *napi)
 {

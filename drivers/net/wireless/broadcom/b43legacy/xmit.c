@@ -574,7 +574,8 @@ void b43legacy_rx(struct b43legacy_wldev *dev,
 	}
 
 	memcpy(IEEE80211_SKB_RXCB(skb), &status, sizeof(status));
-	ieee80211_rx_irqsafe(dev->wl->hw, skb);
+	ieee80211_rx_irqsafe(dev->wl->hw, skb); //DD encpatue into skb. and what's will going on...
+	                                        //ops, call-into directly....
 
 	return;
 drop:

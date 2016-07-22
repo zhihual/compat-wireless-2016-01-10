@@ -489,7 +489,7 @@ void b43legacy_debugfs_log_txstat(struct b43legacy_wldev *dev,
 
 void b43legacy_debugfs_init(void)
 {
-	rootdir = debugfs_create_dir(KBUILD_MODNAME, NULL);
+	rootdir = debugfs_create_dir(KBUILD_MODNAME, NULL); //DD just create one file for logging or debugging??
 	if (IS_ERR(rootdir))
 		rootdir = NULL;
 }
