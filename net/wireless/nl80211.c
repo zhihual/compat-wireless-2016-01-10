@@ -2654,7 +2654,7 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
 }
 
 static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
-{
+{//DD nl added
 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
 	struct vif_params params;
 	struct wireless_dev *wdev;
@@ -10813,7 +10813,7 @@ static __genl_const struct genl_ops nl80211_ops[] = {
 				  NL80211_FLAG_NEED_RTNL,
 	},
 	{
-		.cmd = NL80211_CMD_NEW_INTERFACE,
+		.cmd = NL80211_CMD_NEW_INTERFACE, //DD register by nl..
 		.doit = nl80211_new_interface,
 		.policy = nl80211_policy,
 		.flags = GENL_ADMIN_PERM,
@@ -13418,7 +13418,7 @@ void nl80211_send_ap_stopped(struct wireless_dev *wdev)
 
 /* initialisation/exit functions */
 
-int nl80211_init(void)
+int nl80211_init(void)//DD mac80211 support nl interface. ...
 {
 	int err;
 

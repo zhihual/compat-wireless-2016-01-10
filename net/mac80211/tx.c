@@ -1636,7 +1636,7 @@ static int ieee80211_skb_resize(struct ieee80211_sub_if_data *sdata,
 
 void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
 		    struct sta_info *sta, struct sk_buff *skb)
-{
+{//DD checking tx...
 	struct ieee80211_local *local = sdata->local;
 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
@@ -3119,7 +3119,7 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
 void __ieee80211_subif_start_xmit(struct sk_buff *skb,
 				  struct net_device *dev,
 				  u32 info_flags)
-{
+{//DD _subif_xmit...
 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
 	struct sta_info *sta;
 	struct sk_buff *next;
@@ -3205,7 +3205,7 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
  */
 netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
 				       struct net_device *dev)
-{
+{//DD this is the top function...
 	__ieee80211_subif_start_xmit(skb, dev, 0);
 	return NETDEV_TX_OK;
 }

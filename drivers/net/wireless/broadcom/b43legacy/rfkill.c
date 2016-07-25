@@ -67,7 +67,7 @@ void b43legacy_rfkill_poll(struct ieee80211_hw *hw)
 		brought_up = true;
 	}
 
-	enabled = b43legacy_is_hw_radio_enabled(dev);
+	enabled = b43legacy_is_hw_radio_enabled(dev);//DD poll hw status for radio 
 
 	if (unlikely(enabled != dev->radio_hw_enable)) {
 		dev->radio_hw_enable = enabled;

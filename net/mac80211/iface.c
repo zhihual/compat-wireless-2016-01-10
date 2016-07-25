@@ -1147,11 +1147,11 @@ ieee80211_get_stats64(struct net_device *dev, struct rtnl_link_stats64 *stats)
 	return stats;
 }
 
-static const struct net_device_ops ieee80211_dataif_ops = {
+static const struct net_device_ops ieee80211_dataif_ops = { //DD each net device interface....
 	.ndo_open		= ieee80211_open,
 	.ndo_stop		= ieee80211_stop,
 	.ndo_uninit		= ieee80211_uninit,
-	.ndo_start_xmit		= ieee80211_subif_start_xmit,
+	.ndo_start_xmit		= ieee80211_subif_start_xmit,//DD send packet..
 	.ndo_set_rx_mode	= ieee80211_set_multicast_list,
 	.ndo_change_mtu 	= ieee80211_change_mtu,
 	.ndo_set_mac_address 	= ieee80211_change_mac,
@@ -1722,7 +1722,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
 		     unsigned char name_assign_type,
 		     struct wireless_dev **new_wdev, enum nl80211_iftype type,
 		     struct vif_params *params)
-{
+{//DD comes from if add
 	struct net_device *ndev = NULL;
 	struct ieee80211_sub_if_data *sdata = NULL;
 	struct txq_info *txqi;
@@ -1758,7 +1758,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
 
 		ndev = alloc_netdev_mqs(size + txq_size,
 					name, name_assign_type,
-					ieee80211_if_setup, txqs, 1);
+					ieee80211_if_setup, txqs, 1);//DD here, data path up...
 		if (!ndev)
 			return -ENOMEM;
 		dev_net_set(ndev, wiphy_net(local->hw.wiphy));
@@ -1953,7 +1953,7 @@ void ieee80211_remove_interfaces(struct ieee80211_local *local)
 
 static int netdev_notify(struct notifier_block *nb,
 			 unsigned long state, void *ptr)
-{
+{//DD is this the only device interface
 	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct ieee80211_sub_if_data *sdata;
 

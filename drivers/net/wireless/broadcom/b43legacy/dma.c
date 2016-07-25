@@ -192,7 +192,7 @@ int request_slot(struct b43legacy_dmaring *ring)
 static struct b43legacy_dmaring *priority_to_txring(
 						struct b43legacy_wldev *dev,
 						int queue_priority)
-{
+{//DD get queue ring prioirty
 	struct b43legacy_dmaring *ring;
 
 /*FIXME: For now we always run on TX-ring-1 */
@@ -974,7 +974,7 @@ static u16 generate_cookie(struct b43legacy_dmaring *ring,
 /* Inspect a cookie and find out to which controller/slot it belongs. */
 static
 struct b43legacy_dmaring *parse_cookie(struct b43legacy_wldev *dev,
-				      u16 cookie, int *slot)
+				      u16 cookie, int *slot)//DD ge rong from cookie..
 {
 	struct b43legacy_dma *dma = &dev->dma;
 	struct b43legacy_dmaring *ring = NULL;
@@ -1035,7 +1035,7 @@ static int dma_tx_fragment(struct b43legacy_dmaring *ring,
 			       struct b43legacy_txhdr_fw3)]);
 	err = b43legacy_generate_txhdr(ring->dev, header,
 				 skb->data, skb->len, info,
-				 generate_cookie(ring, slot));
+				 generate_cookie(ring, slot)); //DD gen tx descriptor
 	if (unlikely(err)) {
 		ring->current_slot = old_top_slot;
 		ring->used_slots = old_used_slots;
@@ -1043,7 +1043,7 @@ static int dma_tx_fragment(struct b43legacy_dmaring *ring,
 	}
 
 	meta_hdr->dmaaddr = map_descbuffer(ring, (unsigned char *)header,
-					   sizeof(struct b43legacy_txhdr_fw3), 1);
+					   sizeof(struct b43legacy_txhdr_fw3), 1); //DD dma descriptor
 	if (b43legacy_dma_mapping_error(ring, meta_hdr->dmaaddr,
 					sizeof(struct b43legacy_txhdr_fw3), 1)) {
 		ring->current_slot = old_top_slot;
@@ -1051,7 +1051,7 @@ static int dma_tx_fragment(struct b43legacy_dmaring *ring,
 		return -EIO;
 	}
 	op32_fill_descriptor(ring, desc, meta_hdr->dmaaddr,
-			     sizeof(struct b43legacy_txhdr_fw3), 1, 0, 0);
+			     sizeof(struct b43legacy_txhdr_fw3), 1, 0, 0); //DD fill descritpor
 
 	/* Get a slot for the payload. */
 	slot = request_slot(ring);
@@ -1061,7 +1061,7 @@ static int dma_tx_fragment(struct b43legacy_dmaring *ring,
 	meta->skb = skb;
 	meta->is_last_fragment = true;
 
-	meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
+	meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1); //DD 2nd descriptor
 	/* create a bounce buffer in zone_dma on mapping failure. */
 	if (b43legacy_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
 		bounce_skb = alloc_skb(skb->len, GFP_ATOMIC | GFP_DMA);
@@ -1082,7 +1082,7 @@ static int dma_tx_fragment(struct b43legacy_dmaring *ring,
 		skb = bounce_skb;
 		*in_skb = bounce_skb;
 		meta->skb = skb;
-		meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);
+		meta->dmaaddr = map_descbuffer(ring, skb->data, skb->len, 1);//DD 3nd descriptor
 		if (b43legacy_dma_mapping_error(ring, meta->dmaaddr, skb->len, 1)) {
 			ring->current_slot = old_top_slot;
 			ring->used_slots = old_used_slots;
@@ -1091,12 +1091,12 @@ static int dma_tx_fragment(struct b43legacy_dmaring *ring,
 		}
 	}
 
-	op32_fill_descriptor(ring, desc, meta->dmaaddr,
+	op32_fill_descriptor(ring, desc, meta->dmaaddr, //DD file
 			     skb->len, 0, 1, 1);
 
-	wmb();	/* previous stuff MUST be done */
+	wmb();	/* previous stuff MUST be done */ //DD get ready
 	/* Now transfer the whole frame. */
-	op32_poke_tx(ring, next_slot(ring, slot));
+	op32_poke_tx(ring, next_slot(ring, slot)); //DD tx go.. fly..
 	return 0;
 
 out_free_bounce:
@@ -1158,7 +1158,7 @@ int b43legacy_dma_tx(struct b43legacy_wldev *dev,
 
 	/* dma_tx_fragment might reallocate the skb, so invalidate pointers pointing
 	 * into the skb data or cb now. */
-	err = dma_tx_fragment(ring, &skb);
+	err = dma_tx_fragment(ring, &skb);//DD dma out
 	if (unlikely(err == -ENOKEY)) {
 		/* Drop this packet, as we don't have the encryption key
 		 * anymore and must not transmit it unencrypted. */
@@ -1169,6 +1169,7 @@ int b43legacy_dma_tx(struct b43legacy_wldev *dev,
 		b43legacyerr(dev->wl, "DMA tx mapping failure\n");
 		return err;
 	}
+	//DD tx ring not enable to send another packet. then, stop...
 	if ((free_slots(ring) < SLOTS_PER_PACKET) ||
 	    should_inject_overflow(ring)) {
 		/* This TX ring is full. */
@@ -1215,9 +1216,9 @@ void b43legacy_dma_handle_txstatus(struct b43legacy_wldev *dev,
 
 	while (1) {
 		B43legacy_WARN_ON(!(slot >= 0 && slot < ring->nr_slots));
-		op32_idx2desc(ring, slot, &meta);
+		op32_idx2desc(ring, slot, &meta);//DD get meta
 
-		if (meta->skb)
+		if (meta->skb)//DD unmap
 			unmap_descbuffer(ring, meta->dmaaddr,
 					 meta->skb->len, 1);
 		else
@@ -1265,7 +1266,7 @@ void b43legacy_dma_handle_txstatus(struct b43legacy_wldev *dev,
 			 * status of the transmission.
 			 * Some fields of txstat are already filled in dma_tx().
 			 */
-			ieee80211_tx_status_irqsafe(dev->wl->hw, meta->skb);
+			ieee80211_tx_status_irqsafe(dev->wl->hw, meta->skb); //DD give out status for upper layer..
 			/* skb is freed by ieee80211_tx_status_irqsafe() */
 			meta->skb = NULL;
 		} else {
@@ -1276,7 +1277,7 @@ void b43legacy_dma_handle_txstatus(struct b43legacy_wldev *dev,
 		}
 
 		/* Everything unmapped and free'd. So it's not used anymore. */
-		ring->used_slots--;
+		ring->used_slots--; //DD free descripter here...
 
 		if (meta->is_last_fragment)
 			break;

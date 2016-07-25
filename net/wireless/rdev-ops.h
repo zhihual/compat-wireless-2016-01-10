@@ -38,7 +38,7 @@ static inline struct wireless_dev
 		       unsigned char name_assign_type,
 		       enum nl80211_iftype type, u32 *flags,
 		       struct vif_params *params)
-{
+{//DD config add
 	struct wireless_dev *ret;
 	trace_rdev_add_virtual_intf(&rdev->wiphy, name, type);
 	ret = rdev->ops->add_virtual_intf(&rdev->wiphy, name, name_assign_type,

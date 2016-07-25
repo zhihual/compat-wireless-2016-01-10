@@ -754,7 +754,7 @@ static void handle_irq_transmit_status(struct b43legacy_wldev *dev)
 		stat.for_ampdu = !!(tmp & 0x0020);
 		stat.acked = !!(tmp & 0x0002);
 
-		b43legacy_handle_txstatus(dev, &stat);
+		b43legacy_handle_txstatus(dev, &stat);//DD handle tx status. should process tx skb here, right?
 	}
 }
 
@@ -1259,7 +1259,7 @@ static void b43legacy_beacon_update_trigger_work(struct work_struct *work)
 /* Asynchronously update the packet templates in template RAM.
  * Locking: Requires wl->irq_lock to be locked. */
 static void b43legacy_update_templates(struct b43legacy_wl *wl)
-{
+{//DD beacon update, finnal take effect after beacon tx complete handler
 	struct sk_buff *beacon;
 	/* This is the top half of the ansynchronous beacon update. The bottom
 	 * half is the beacon IRQ. Beacon update must be asynchronous to avoid
@@ -1338,7 +1338,7 @@ static void b43legacy_interrupt_tasklet(struct b43legacy_wldev *dev)
 
 	if (unlikely(merged_dma_reason & (B43legacy_DMAIRQ_FATALMASK |
 					  B43legacy_DMAIRQ_NONFATALMASK))) {
-		if (merged_dma_reason & B43legacy_DMAIRQ_FATALMASK) {
+		if (merged_dma_reason & B43legacy_DMAIRQ_FATALMASK) {//DD dma error
 			b43legacyerr(dev->wl, "Fatal DMA error: "
 			       "0x%08X, 0x%08X, 0x%08X, "
 			       "0x%08X, 0x%08X, 0x%08X\n",
@@ -1362,11 +1362,11 @@ static void b43legacy_interrupt_tasklet(struct b43legacy_wldev *dev)
 	if (unlikely(reason & B43legacy_IRQ_UCODE_DEBUG))
 		handle_irq_ucode_debug(dev);
 	if (reason & B43legacy_IRQ_TBTT_INDI)
-		handle_irq_tbtt_indication(dev);
+		handle_irq_tbtt_indication(dev); //DD TBTT interrupt.
 	if (reason & B43legacy_IRQ_ATIM_END)
 		handle_irq_atim_end(dev);
 	if (reason & B43legacy_IRQ_BEACON)
-		handle_irq_beacon(dev);
+		handle_irq_beacon(dev); //DD beacon 
 	if (reason & B43legacy_IRQ_PMQ)
 		handle_irq_pmq(dev);
 	if (reason & B43legacy_IRQ_TXFIFO_FLUSH_OK)
@@ -1379,7 +1379,7 @@ static void b43legacy_interrupt_tasklet(struct b43legacy_wldev *dev)
 		if (b43legacy_using_pio(dev))
 			b43legacy_pio_rx(dev->pio.queue0);
 		else
-			b43legacy_dma_rx(dev->dma.rx_ring0); // We have packet
+			b43legacy_dma_rx(dev->dma.rx_ring0); //DD We have packet
 	}
 	B43legacy_WARN_ON(dma_reason[1] & B43legacy_DMAIRQ_RX_DONE);
 	B43legacy_WARN_ON(dma_reason[2] & B43legacy_DMAIRQ_RX_DONE);
@@ -1387,14 +1387,15 @@ static void b43legacy_interrupt_tasklet(struct b43legacy_wldev *dev)
 		if (b43legacy_using_pio(dev))
 			b43legacy_pio_rx(dev->pio.queue3);
 		else
-			b43legacy_dma_rx(dev->dma.rx_ring3);
+			b43legacy_dma_rx(dev->dma.rx_ring3); //DD We handle ring3.. 
 	}
 	B43legacy_WARN_ON(dma_reason[4] & B43legacy_DMAIRQ_RX_DONE);
 	B43legacy_WARN_ON(dma_reason[5] & B43legacy_DMAIRQ_RX_DONE);
 
 	if (reason & B43legacy_IRQ_TX_OK)
-		handle_irq_transmit_status(dev);
+		handle_irq_transmit_status(dev); //DD handle TX done..
 
+    //Enable IRQ marsk..
 	b43legacy_write32(dev, B43legacy_MMIO_GEN_IRQ_MASK, dev->irq_mask);
 	mmiowb();
 	spin_unlock_irqrestore(&dev->wl->irq_lock, flags);
@@ -1483,7 +1484,7 @@ static irqreturn_t b43legacy_interrupt_handler(int irq, void *dev_id)
 
 	b43legacy_interrupt_ack(dev, reason);
 	/* Disable all IRQs. They are enabled again in the bottom half. */
-	b43legacy_write32(dev, B43legacy_MMIO_GEN_IRQ_MASK, 0);
+	b43legacy_write32(dev, B43legacy_MMIO_GEN_IRQ_MASK, 0); //DD disable IRQ, and schedule tasklet.
 	/* Save the reason code and call our bottom half. */
 	dev->irq_reason = reason;
 	tasklet_schedule(&dev->isr_tasklet);
@@ -2491,24 +2492,24 @@ static void b43legacy_tx_work(struct work_struct *work) //DD do really tx task
 
 	for (queue_num = 0; queue_num < B43legacy_QOS_QUEUE_NUM; queue_num++) {
 		while (skb_queue_len(&wl->tx_queue[queue_num])) {
-			skb = skb_dequeue(&wl->tx_queue[queue_num]);
+			skb = skb_dequeue(&wl->tx_queue[queue_num]); //DD one by one qouee, and get queue skb
 			if (b43legacy_using_pio(dev))
 				err = b43legacy_pio_tx(dev, skb);
 			else
-				err = b43legacy_dma_tx(dev, skb);
+				err = b43legacy_dma_tx(dev, skb); //DD dma out..
 			if (err == -ENOSPC) {
-				wl->tx_queue_stopped[queue_num] = 1;
-				ieee80211_stop_queue(wl->hw, queue_num);
-				skb_queue_head(&wl->tx_queue[queue_num], skb);
+				wl->tx_queue_stopped[queue_num] = 1; //DD stop qoue
+				ieee80211_stop_queue(wl->hw, queue_num); //DD ask upper stop
+				skb_queue_head(&wl->tx_queue[queue_num], skb); //DD queue to head 
 				break;
 			}
 			if (unlikely(err))
-				dev_kfree_skb(skb); /* Drop it */
+				dev_kfree_skb(skb); /* Drop it */ //DD why free here??? oh, break in previous
 			err = 0;
 		}
 
 		if (!err)
-			wl->tx_queue_stopped[queue_num] = 0;
+			wl->tx_queue_stopped[queue_num] = 0; //DD mark working..
 	}
 
 	mutex_unlock(&wl->mutex);
@@ -2531,7 +2532,7 @@ static void b43legacy_op_tx(struct ieee80211_hw *hw,
 	if (!wl->tx_queue_stopped[skb->queue_mapping])
 		ieee80211_queue_work(wl->hw, &wl->tx_work); //DD qoeue one tx work
 	else
-		ieee80211_stop_queue(wl->hw, skb->queue_mapping); //DD don't understand...
+		ieee80211_stop_queue(wl->hw, skb->queue_mapping); //DD don't understand..., ask upper layer don't queue..?
 }
 
 static int b43legacy_op_conf_tx(struct ieee80211_hw *hw,
@@ -2728,7 +2729,7 @@ static int b43legacy_op_dev_config(struct ieee80211_hw *hw,
 	default:
 		B43legacy_WARN_ON(1);
 	}
-	err = b43legacy_switch_phymode(wl, new_phymode);
+	err = b43legacy_switch_phymode(wl, new_phymode); //DD 5G phymode don't care?
 	if (err)
 		goto out_unlock_mutex;
 
@@ -2838,7 +2839,7 @@ static void b43legacy_op_bss_info_changed(struct ieee80211_hw *hw,
 				    struct ieee80211_vif *vif,
 				    struct ieee80211_bss_conf *conf,
 				    u32 changed)
-{
+{//DD pass in dev, interface and configration...  changed is combile flag for which part change.
 	struct b43legacy_wl *wl = hw_to_b43legacy_wl(hw);
 	struct b43legacy_wldev *dev;
 	unsigned long flags;
@@ -2858,7 +2859,7 @@ static void b43legacy_op_bss_info_changed(struct ieee80211_hw *hw,
 	}
 	b43legacy_write32(dev, B43legacy_MMIO_GEN_IRQ_MASK, 0);
 
-	if (changed & BSS_CHANGED_BSSID) {
+	if (changed & BSS_CHANGED_BSSID) {//DD change mac
 		b43legacy_synchronize_irq(dev);
 
 		if (conf->bssid)
@@ -2878,29 +2879,29 @@ static void b43legacy_op_bss_info_changed(struct ieee80211_hw *hw,
 	}
 	spin_unlock_irqrestore(&wl->irq_lock, flags);
 
-	b43legacy_mac_suspend(dev);
+	b43legacy_mac_suspend(dev);//DD suspend
 
 	if (changed & BSS_CHANGED_BEACON_INT &&
 	    (b43legacy_is_mode(wl, NL80211_IFTYPE_AP) ||
-	     b43legacy_is_mode(wl, NL80211_IFTYPE_ADHOC)))
+	     b43legacy_is_mode(wl, NL80211_IFTYPE_ADHOC))) //DD change beacon interval
 		b43legacy_set_beacon_int(dev, conf->beacon_int);
 
-	if (changed & BSS_CHANGED_BASIC_RATES)
+	if (changed & BSS_CHANGED_BASIC_RATES)//DD change basic rate
 		b43legacy_update_basic_rates(dev, conf->basic_rates);
 
-	if (changed & BSS_CHANGED_ERP_SLOT) {
+	if (changed & BSS_CHANGED_ERP_SLOT) {//DD change ERP slot?? what's this?
 		if (conf->use_short_slot)
 			b43legacy_short_slot_timing_enable(dev);
 		else
 			b43legacy_short_slot_timing_disable(dev);
 	}
 
-	b43legacy_mac_enable(dev);
+	b43legacy_mac_enable(dev);//DD enable, pair...
 
 	spin_lock_irqsave(&wl->irq_lock, flags);
 	b43legacy_write32(dev, B43legacy_MMIO_GEN_IRQ_MASK, dev->irq_mask);
 	/* XXX: why? */
-	mmiowb();
+	mmiowb(); //DD this is make sure befoe write happening. to reduce disorder of PCIe reach...
 	spin_unlock_irqrestore(&wl->irq_lock, flags);
  out_unlock_mutex:
 	mutex_unlock(&wl->mutex);
@@ -2909,7 +2910,7 @@ static void b43legacy_op_bss_info_changed(struct ieee80211_hw *hw,
 static void b43legacy_op_configure_filter(struct ieee80211_hw *hw,
 					  unsigned int changed,
 					  unsigned int *fflags,u64 multicast)
-{
+{//DD config filter for future use.
 	struct b43legacy_wl *wl = hw_to_b43legacy_wl(hw);
 	struct b43legacy_wldev *dev = wl->current_dev;
 	unsigned long flags;
@@ -2988,7 +2989,7 @@ static int b43legacy_wireless_core_start(struct b43legacy_wldev *dev)
 	B43legacy_WARN_ON(b43legacy_status(dev) != B43legacy_STAT_INITIALIZED);
 
 	drain_txstatus_queue(dev);
-	err = request_irq(dev->dev->irq, b43legacy_interrupt_handler,
+	err = request_irq(dev->dev->irq, b43legacy_interrupt_handler,//DD hook irq in...
 			  IRQF_SHARED, KBUILD_MODNAME, dev);
 	if (err) {
 		b43legacyerr(dev->wl, "Cannot request IRQ-%d\n",
@@ -3526,7 +3527,7 @@ static void b43legacy_op_stop(struct ieee80211_hw *hw)
 
 	mutex_lock(&wl->mutex);
 	if (b43legacy_status(dev) >= B43legacy_STAT_STARTED)
-		b43legacy_wireless_core_stop(dev);
+		b43legacy_wireless_core_stop(dev);//DD stop --> then exit..
 	b43legacy_wireless_core_exit(dev);
 	wl->radio_enabled = false;
 	mutex_unlock(&wl->mutex);
@@ -3775,7 +3776,7 @@ static int b43legacy_one_core_attach(struct ssb_device *dev,
 	b43legacy_set_status(wldev, B43legacy_STAT_UNINIT);
 	wldev->bad_frames_preempt = modparam_bad_frames_preempt;
 	tasklet_init(&wldev->isr_tasklet,
-		     (void (*)(unsigned long))b43legacy_interrupt_tasklet, //DD init interrupt 
+		     (void (*)(unsigned long))b43legacy_interrupt_tasklet, //DD init interrupt. This tasklet is on interrupt
 		     (unsigned long)wldev);
 	if (modparam_pio)
 		wldev->__using_pio = true;//DD should not come here.
@@ -3825,7 +3826,7 @@ static int b43legacy_wireless_init(struct ssb_device *dev)//DD generally, this f
 
 	b43legacy_sprom_fixup(dev->bus); //DD haha, give apple an fix up...
 
-	hw = ieee80211_alloc_hw(sizeof(*wl), &b43legacy_hw_ops);//DD wow, wl get it's memory hardware hook up...
+	hw = ieee80211_alloc_hw(sizeof(*wl), &b43legacy_hw_ops);//DD wow, wl get it's memory hardware hook up... 
 	if (!hw) {
 		b43legacyerr(NULL, "Could not allocate ieee80211 device\n");
 		goto out;

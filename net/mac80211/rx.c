@@ -472,6 +472,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
  * returns a cleaned-up SKB that no longer includes the FCS nor the
  * radiotap header the driver might have added.
  */
+ //DD look at this...
 static struct sk_buff *
 ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
 		     struct ieee80211_rate *rate)
@@ -3084,7 +3085,7 @@ static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
 	skb_set_mac_header(skb, 0);
 	skb->ip_summed = CHECKSUM_UNNECESSARY;
 	skb->pkt_type = PACKET_OTHERHOST;
-	skb->protocol = htons(ETH_P_802_2);
+	skb->protocol = htons(ETH_P_802_2);//DD transer to 802.3..
 
 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
 		if (!ieee80211_sdata_running(sdata))
@@ -3108,7 +3109,7 @@ static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
 
 	if (prev_dev) {
 		skb->dev = prev_dev;
-		netif_receive_skb(skb);
+		netif_receive_skb(skb);//DD is this indicate received packet?
 		return;
 	}
 
@@ -3153,7 +3154,7 @@ static void ieee80211_rx_handlers_result(struct ieee80211_rx_data *rx,
 }
 
 static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx,
-				  struct sk_buff_head *frames)
+				  struct sk_buff_head *frames)//DD should be handled here...
 {
 	ieee80211_rx_result res = RX_DROP_MONITOR;
 	struct sk_buff *skb;
@@ -3410,7 +3411,7 @@ static bool ieee80211_prepare_and_rx_handle(struct ieee80211_rx_data *rx,
 
 	rx->skb = skb;
 
-	if (!ieee80211_accept_frame(rx))
+	if (!ieee80211_accept_frame(rx))//DD is this function up to ndo device...?
 		return false;
 
 	if (!consume) {
@@ -3480,7 +3481,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
 		     ieee80211_is_beacon(hdr->frame_control)))
 		ieee80211_scan_rx(local, skb);
 
-	if (ieee80211_is_data(fc)) {
+	if (ieee80211_is_data(fc)) {//DD here still 802.11 frame...
 		const struct bucket_table *tbl;
 
 		prev_sta = NULL;
@@ -3547,7 +3548,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
 	}
 
  out:
-	dev_kfree_skb(skb);
+	dev_kfree_skb(skb);//DD finally, free it..
 }
 
 /*

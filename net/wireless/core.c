@@ -341,7 +341,7 @@ struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
 {
 	static atomic_t wiphy_counter = ATOMIC_INIT(0);
 
-	struct cfg80211_registered_device *rdev;
+	struct cfg80211_registered_device *rdev;//DD this is for cfg80211 register....
 	int alloc_size;
 
 	/*
@@ -434,7 +434,7 @@ use_default_name:
 	INIT_DELAYED_WORK(&rdev->dfs_update_channels_wk,
 			  cfg80211_dfs_channels_update_work);
 	device_initialize(&rdev->wiphy.dev);
-	rdev->wiphy.dev.class = &ieee80211_class;
+	rdev->wiphy.dev.class = &ieee80211_class;//DD don't know...
 	rdev->wiphy.dev.platform_data = rdev;
 	device_enable_async_suspend(&rdev->wiphy.dev);
 
@@ -714,7 +714,7 @@ int wiphy_register(struct wiphy *wiphy)
 	rdev->wiphy.features |= NL80211_FEATURE_SCAN_FLUSH;
 
 	rtnl_lock();
-	res = device_add(&rdev->wiphy.dev);
+	res = device_add(&rdev->wiphy.dev);//DD register cfg80211 dev...
 	if (res) {
 		rtnl_unlock();
 		return res;
@@ -734,7 +734,7 @@ int wiphy_register(struct wiphy *wiphy)
 		rdev->wiphy.debugfsdir = NULL;
 
 	cfg80211_debugfs_rdev_add(rdev);
-	nl80211_notify_wiphy(rdev, NL80211_CMD_NEW_WIPHY);
+	nl80211_notify_wiphy(rdev, NL80211_CMD_NEW_WIPHY);//DD nl80211 apprear...
 
 	if (wiphy->regulatory_flags & REGULATORY_CUSTOM_REG) {
 		struct regulatory_request request;
@@ -992,6 +992,7 @@ EXPORT_SYMBOL(cfg80211_stop_iface);
 static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
 					 unsigned long state, void *ptr)
 {
+//DD net call register....
 	struct net_device *dev = netdev_notifier_info_to_dev(ptr);
 	struct wireless_dev *wdev = dev->ieee80211_ptr;
 	struct cfg80211_registered_device *rdev;
@@ -1034,7 +1035,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
 #ifdef CPTCFG_CFG80211_WEXT
 #ifdef CONFIG_WIRELESS_EXT
 		if (!dev->wireless_handlers)
-			dev->wireless_handlers = &cfg80211_wext_handler;
+			dev->wireless_handlers = &cfg80211_wext_handler;//DD hook Wext handler here...
 #else
 		printk_once(KERN_WARNING "cfg80211: wext will not work because "
 			    "kernel was compiled with CONFIG_WIRELESS_EXT=n. "
@@ -1196,23 +1197,23 @@ static struct pernet_operations cfg80211_pernet_ops = {
 	.exit = cfg80211_pernet_exit,
 };
 
-static int __init cfg80211_init(void)
+static int __init cfg80211_init(void)//DD cfg80211, topest interface...
 {
 	int err;
 
-	err = register_pernet_device(&cfg80211_pernet_ops);
+	err = register_pernet_device(&cfg80211_pernet_ops);//DD some rename stuff...
 	if (err)
 		goto out_fail_pernet;
 
-	err = wiphy_sysfs_init();
+	err = wiphy_sysfs_init();//DD register class... why....
 	if (err)
 		goto out_fail_sysfs;
 
-	err = register_netdevice_notifier(&cfg80211_netdev_notifier);
+	err = register_netdevice_notifier(&cfg80211_netdev_notifier);//Net device ....
 	if (err)
 		goto out_fail_notifier;
 
-	err = nl80211_init();
+	err = nl80211_init();//DD Setup nl interface 
 	if (err)
 		goto out_fail_nl80211;
 

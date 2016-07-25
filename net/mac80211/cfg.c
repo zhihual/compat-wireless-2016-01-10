@@ -27,7 +27,7 @@ static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
 						enum nl80211_iftype type,
 						u32 *flags,
 						struct vif_params *params)
-{
+{//DD by add interface
 	struct ieee80211_local *local = wiphy_priv(wiphy);
 	struct wireless_dev *wdev;
 	struct ieee80211_sub_if_data *sdata;
@@ -3362,8 +3362,8 @@ static int ieee80211_del_tx_ts(struct wiphy *wiphy, struct net_device *dev,
 	return -ENOENT;
 }
 
-const struct cfg80211_ops mac80211_config_ops = {
-	.add_virtual_intf = ieee80211_add_iface,
+const struct cfg80211_ops mac80211_config_ops = {//DD ops interface for cfg80211....
+	.add_virtual_intf = ieee80211_add_iface,//DD hehe 
 	.del_virtual_intf = ieee80211_del_iface,
 	.change_virtual_intf = ieee80211_change_iface,
 	.start_p2p_device = ieee80211_start_p2p_device,

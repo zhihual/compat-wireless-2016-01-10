@@ -35,7 +35,7 @@ void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
 		skb_queue_len(&local->skb_queue_unreliable);
 	while (tmp > IEEE80211_IRQSAFE_QUEUE_LIMIT &&
 	       (skb = skb_dequeue(&local->skb_queue_unreliable))) {
-		ieee80211_free_txskb(hw, skb);
+		ieee80211_free_txskb(hw, skb);//DD trying to free..
 		tmp--;
 		I802_DEBUG_INC(local->tx_status_drop);
 	}
@@ -953,7 +953,8 @@ void ieee80211_report_low_ack(struct ieee80211_sta *pubsta, u32 num_packets)
 }
 EXPORT_SYMBOL(ieee80211_report_low_ack);
 
-void ieee80211_free_txskb(struct ieee80211_hw *hw, struct sk_buff *skb)
+void ieee80211_free_txskb(struct ieee80211_hw *hw, struct sk_buff *skb)//DD free skb. looks skb is not below to each layer.. not follow the callstack. 
+//DD it must use independent pool managment to manage pool.  skb can hook up call back...
 {
 	struct ieee80211_local *local = hw_to_local(hw);
 

@@ -604,7 +604,7 @@ void b43legacy_handle_txstatus(struct b43legacy_wldev *dev,
 	if (b43legacy_using_pio(dev))
 		b43legacy_pio_handle_txstatus(dev, status);
 	else
-		b43legacy_dma_handle_txstatus(dev, status);
+		b43legacy_dma_handle_txstatus(dev, status);//DD upper to protocal level...
 }
 
 /* Handle TX status report as received through DMA/PIO queues */

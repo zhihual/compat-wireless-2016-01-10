@@ -491,7 +491,7 @@ static const struct ieee80211_vht_cap mac80211_vht_capa_mod_mask = {
 struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
 					   const struct ieee80211_ops *ops,
 					   const char *requested_name)
-{
+{//DD Trigger from deeper layer.
 	struct ieee80211_local *local;
 	int priv_size, i;
 	struct wiphy *wiphy;
@@ -499,7 +499,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
 
 	if (WARN_ON(!ops->tx || !ops->start || !ops->stop || !ops->config ||
 		    !ops->add_interface || !ops->remove_interface ||
-		    !ops->configure_filter))
+		    !ops->configure_filter)) //DD this is the check for mandotory support
 		return NULL;
 
 	if (WARN_ON(ops->sta_state && (ops->sta_add || ops->sta_remove)))
@@ -530,7 +530,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
 	 */
 	priv_size = ALIGN(sizeof(*local), NETDEV_ALIGN) + priv_data_len;
 
-	wiphy = wiphy_new_nm(&mac80211_config_ops, priv_size, requested_name);
+	wiphy = wiphy_new_nm(&mac80211_config_ops, priv_size, requested_name);//DD New wiphy, actually, below allocate one big data struct for cfg80211 config...
 
 	if (!wiphy)
 		return NULL;
@@ -802,7 +802,7 @@ static int ieee80211_init_cipher_suites(struct ieee80211_local *local)
 	return 0;
 }
 
-int ieee80211_register_hw(struct ieee80211_hw *hw)
+int ieee80211_register_hw(struct ieee80211_hw *hw)//DD this is the trigger from deep layer..
 {
 	struct ieee80211_local *local = hw_to_local(hw);
 	int result, i;
@@ -1021,7 +1021,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
 
 	local->hw.wiphy->max_num_csa_counters = IEEE80211_MAX_CSA_COUNTERS_NUM;
 
-	result = wiphy_register(local->hw.wiphy);
+	result = wiphy_register(local->hw.wiphy);//DD hehe, key function.
 	if (result < 0)
 		goto fail_wiphy_register;
 
@@ -1086,7 +1086,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
 	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_STATION) &&
 	    !ieee80211_hw_check(hw, NO_AUTO_VIF)) {
 		result = ieee80211_if_add(local, "wlan%d", NET_NAME_ENUM, NULL,
-					  NL80211_IFTYPE_STATION, NULL);
+					  NL80211_IFTYPE_STATION, NULL);//DD triggered by lower later
 		if (result)
 			wiphy_warn(local->hw.wiphy,
 				   "Failed to add default virtual iface\n");
@@ -1215,7 +1215,7 @@ void ieee80211_free_hw(struct ieee80211_hw *hw)
 }
 EXPORT_SYMBOL(ieee80211_free_hw);
 
-static int __init ieee80211_init(void)
+static int __init ieee80211_init(void)//DD mac80211 entry point
 {
 	struct sk_buff *skb;
 	int ret;
@@ -1224,7 +1224,7 @@ static int __init ieee80211_init(void)
 	BUILD_BUG_ON(offsetof(struct ieee80211_tx_info, driver_data) +
 		     IEEE80211_TX_INFO_DRIVER_DATA_SIZE > sizeof(skb->cb));
 
-	ret = rc80211_minstrel_init();
+	ret = rc80211_minstrel_init(); //DD register two rate control function tables in.
 	if (ret)
 		return ret;
 
@@ -1232,13 +1232,13 @@ static int __init ieee80211_init(void)
 	if (ret)
 		goto err_minstrel;
 
-	ret = ieee80211_iface_init();
+	ret = ieee80211_iface_init(); //DD init interface  oh... export some API out, so, export is interface
 	if (ret)
 		goto err_netdev;
 
 	return 0;
  err_netdev:
-	rc80211_minstrel_ht_exit();
+	rc80211_minstrel_ht_exit();//DD clean up 
  err_minstrel:
 	rc80211_minstrel_exit();
 
@@ -1250,9 +1250,9 @@ static void __exit ieee80211_exit(void)
 	rc80211_minstrel_ht_exit();
 	rc80211_minstrel_exit();
 
-	ieee80211s_stop();
+	ieee80211s_stop(); // DD this is mesh ... 
 
-	ieee80211_iface_exit();
+	ieee80211_iface_exit(); //DD iface exit
 
 	rcu_barrier();
 }
