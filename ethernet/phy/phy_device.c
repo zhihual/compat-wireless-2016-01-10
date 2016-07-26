@@ -1259,10 +1259,10 @@ static int phy_probe(struct device *dev)
 	phydev->advertising = phydev->supported;
 
 	/* Set the state to READY by default */
-	phydev->state = PHY_READY;
+	phydev->state = PHY_READY; //DD phy ready. 
 
 	if (phydev->drv->probe)
-		err = phydev->drv->probe(phydev);
+		err = phydev->drv->probe(phydev); // Call driver probe, if driver provide
 
 	mutex_unlock(&phydev->lock);
 
@@ -1294,10 +1294,10 @@ int phy_driver_register(struct phy_driver *new_driver)
 
 	new_driver->driver.name = new_driver->name;
 	new_driver->driver.bus = &mdio_bus_type;
-	new_driver->driver.probe = phy_probe;
-	new_driver->driver.remove = phy_remove;
+	new_driver->driver.probe = phy_probe; //DD attention, driver.probe and drv->probe are not same... actually, they are two different.
+	new_driver->driver.remove = phy_remove; 
 
-	retval = driver_register(&new_driver->driver);
+	retval = driver_register(&new_driver->driver); //DD register driver to OS. when device comes, probe will be called.
 	if (retval) {
 		pr_err("%s: Error %d in registering driver\n",
 		       new_driver->name, retval);
@@ -1316,7 +1316,7 @@ int phy_drivers_register(struct phy_driver *new_driver, int n)
 	int i, ret = 0;
 
 	for (i = 0; i < n; i++) {
-		ret = phy_driver_register(new_driver + i);
+		ret = phy_driver_register(new_driver + i);//DD register phy drivers, one by one..
 		if (ret) {
 			while (i-- > 0)
 				phy_driver_unregister(new_driver + i);
@@ -1376,12 +1376,12 @@ static int __init phy_init(void)
 {
 	int rc;
 
-	rc = mdio_bus_init();
+	rc = mdio_bus_init(); //DD register mdio bus
 	if (rc)
 		return rc;
 
 	rc = phy_drivers_register(genphy_driver,
-				  ARRAY_SIZE(genphy_driver));
+				  ARRAY_SIZE(genphy_driver));//DD register device..
 	if (rc)
 		mdio_bus_exit();
 
