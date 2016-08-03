@@ -71,7 +71,7 @@ void phy_print_status(struct phy_device *phydev)
 			DUPLEX_FULL == phydev->duplex ? "Full" : "Half",
 			phydev->pause ? "rx/tx" : "off");
 	} else	{
-		netdev_info(phydev->attached_dev, "Link is Down\n");
+		netdev_info(phydev->attached_dev, "Link is Down\n"); //DD print information.
 	}
 }
 EXPORT_SYMBOL(phy_print_status);
@@ -88,7 +88,7 @@ EXPORT_SYMBOL(phy_print_status);
 static int phy_clear_interrupt(struct phy_device *phydev)
 {
 	if (phydev->drv->ack_interrupt)
-		return phydev->drv->ack_interrupt(phydev);
+		return phydev->drv->ack_interrupt(phydev);//DD should be phy hw's driver... not ethernet driver....
 
 	return 0;
 }
@@ -462,7 +462,7 @@ int phy_mii_ioctl(struct phy_device *phydev, struct ifreq *ifr, int cmd)
 		}
 
 		mdiobus_write(phydev->bus, mii_data->phy_id,
-			      mii_data->reg_num, val);
+			      mii_data->reg_num, val);//DD mdiobus_read/write is the key...
 
 		if (mii_data->reg_num == MII_BMCR &&
 		    val & BMCR_RESET)
@@ -781,7 +781,7 @@ EXPORT_SYMBOL(phy_stop);
  *   Also used to indicate the MDIO bus has cleared an error
  *   condition.
  */
-void phy_start(struct phy_device *phydev)
+void phy_start(struct phy_device *phydev) //DD phy.c is the upper interface for ethernet driver...
 {
 	mutex_lock(&phydev->lock);
 

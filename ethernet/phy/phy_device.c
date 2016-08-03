@@ -422,12 +422,13 @@ int phy_connect_direct(struct net_device *dev, struct phy_device *phydev,
 {
 	int rc;
 
+    //DD hook up net_dev and phy_dev
 	rc = phy_attach_direct(dev, phydev, phydev->dev_flags, interface);
 	if (rc)
 		return rc;
 
-	phy_prepare_link(phydev, handler);
-	phy_start_machine(phydev);
+	phy_prepare_link(phydev, handler); //DD just hook/register callback function.
+	phy_start_machine(phydev); //DD start phy statemachie and interrupt...
 	if (phydev->irq > 0)
 		phy_start_interrupts(phydev);
 
@@ -586,8 +587,9 @@ int phy_attach_direct(struct net_device *dev, struct phy_device *phydev,
 			d->driver = &genphy_driver[GENPHY_DRV_10G].driver;
 		else
 			d->driver = &genphy_driver[GENPHY_DRV_1G].driver;
-
-		err = d->driver->probe(d);
+        //DD assign driver
+        
+		err = d->driver->probe(d);//DD call probe...
 		if (err >= 0)
 			err = device_bind_driver(d);
 
@@ -609,19 +611,19 @@ int phy_attach_direct(struct net_device *dev, struct phy_device *phydev,
 	}
 
 	phydev->attached_dev = dev;
-	dev->phydev = phydev;
+	dev->phydev = phydev; //DD exchange pointer.
 
 	phydev->dev_flags = flags;
 
 	phydev->interface = interface;
 
-	phydev->state = PHY_READY;
+	phydev->state = PHY_READY;//DD make phy dev ready
 
 	/* Do initial configuration here, now that
 	 * we have certain key parameters
 	 * (dev_flags and interface)
 	 */
-	err = phy_init_hw(phydev);
+	err = phy_init_hw(phydev); //DD make phy init
 	if (err)
 		phy_detach(phydev);
 	else
@@ -756,7 +758,7 @@ static int genphy_config_advert(struct phy_device *phydev)
 	adv |= ethtool_adv_to_mii_adv_t(advertise);
 
 	if (adv != oldadv) {
-		err = phy_write(phydev, MII_ADVERTISE, adv);
+		err = phy_write(phydev, MII_ADVERTISE, adv);//DD finally go to MII
 
 		if (err < 0)
 			return err;
@@ -1316,7 +1318,7 @@ int phy_drivers_register(struct phy_driver *new_driver, int n)
 	int i, ret = 0;
 
 	for (i = 0; i < n; i++) {
-		ret = phy_driver_register(new_driver + i);//DD register phy drivers, one by one..
+		ret = phy_driver_register(new_driver + i);//DD register phy drivers, one by one.. for each kind of phy...
 		if (ret) {
 			while (i-- > 0)
 				phy_driver_unregister(new_driver + i);
@@ -1372,7 +1374,7 @@ static struct phy_driver genphy_driver[] = {
 	.driver         = {.owner = THIS_MODULE, },
 } };
 
-static int __init phy_init(void)
+static int __init phy_init(void)//DD mdio bus is slave of phy devices
 {
 	int rc;
 

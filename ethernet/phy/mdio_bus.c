@@ -48,7 +48,7 @@
  * Description: called by a bus driver to allocate an mii_bus
  * structure to fill in.
  */
-struct mii_bus *mdiobus_alloc_size(size_t size)
+struct mii_bus *mdiobus_alloc_size(size_t size)//DD i see this in ethernet driver call
 {
 	struct mii_bus *bus;
 	size_t aligned_size = ALIGN(sizeof(*bus), NETDEV_ALIGN);
@@ -244,7 +244,7 @@ static inline void of_mdiobus_link_phydev(struct mii_bus *mdio,
  *
  * Returns 0 on success or < 0 on error.
  */
-int mdiobus_register(struct mii_bus *bus)
+int mdiobus_register(struct mii_bus *bus)//DD bgmac call this with mii_bus structure
 {
 	int i, err;
 
@@ -270,13 +270,13 @@ int mdiobus_register(struct mii_bus *bus)
 	mutex_init(&bus->mdio_lock);
 
 	if (bus->reset)
-		bus->reset(bus);
+		bus->reset(bus);//DD is they have reset, then reset
 
 	for (i = 0; i < PHY_MAX_ADDR; i++) {
 		if ((bus->phy_mask & (1 << i)) == 0) {
 			struct phy_device *phydev;
 
-			phydev = mdiobus_scan(bus, i);
+			phydev = mdiobus_scan(bus, i);//DD looking for phydev maches.. finally, create phy_device
 			if (IS_ERR(phydev)) {
 				err = PTR_ERR(phydev);
 				goto error;

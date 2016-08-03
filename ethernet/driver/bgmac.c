@@ -795,7 +795,7 @@ static u16 bgmac_phy_read(struct bgmac *bgmac, u8 phyaddr, u8 reg)
 
 /* http://bcm-v4.sipsolutions.net/mac-gbit/gmac/chipphywr */
 static int bgmac_phy_write(struct bgmac *bgmac, u8 phyaddr, u8 reg, u16 value)
-{
+{//DD it's turn out bcma_read bcma_write is the lowest interface for ethernet driver....
 	struct bcma_device *core;
 	u16 phy_access_addr;
 	u16 phy_ctl_addr;
@@ -879,9 +879,9 @@ static void bgmac_phy_reset(struct bgmac *bgmac)
 	if (bgmac->phyaddr == BGMAC_PHY_NOREGS)
 		return;
 
-	bgmac_phy_write(bgmac, bgmac->phyaddr, MII_BMCR, BMCR_RESET);
+	bgmac_phy_write(bgmac, bgmac->phyaddr, MII_BMCR, BMCR_RESET); //DD duang duang!! bgmac phy write
 	udelay(100);
-	if (bgmac_phy_read(bgmac, bgmac->phyaddr, MII_BMCR) & BMCR_RESET)
+	if (bgmac_phy_read(bgmac, bgmac->phyaddr, MII_BMCR) & BMCR_RESET)//DD write, read, and finally init, flush values into..
 		bgmac_err(bgmac, "PHY reset failed\n");
 	bgmac_phy_init(bgmac);
 }
@@ -993,7 +993,7 @@ static void bgmac_mac_speed(struct bgmac *bgmac)
 }
 
 static void bgmac_miiconfig(struct bgmac *bgmac)
-{
+{//DD go through bcma driver... where is MII active operation??
 	struct bcma_device *core = bgmac->core;
 	u8 imode;
 
@@ -1133,13 +1133,13 @@ static void bgmac_chip_reset(struct bgmac *bgmac)
 	bgmac->mac_speed = SPEED_UNKNOWN;
 	bgmac->mac_duplex = DUPLEX_UNKNOWN;
 
-	bgmac_clear_mib(bgmac);
+	bgmac_clear_mib(bgmac); //DD core read/write, it sames direct memory access for arm..
 	if (core->id.id == BCMA_CORE_4706_MAC_GBIT)
 		bcma_maskset32(bgmac->cmn, BCMA_GMAC_CMN_PHY_CTL, ~0,
 			       BCMA_GMAC_CMN_PC_MTE);
 	else
 		bgmac_set(bgmac, BGMAC_PHY_CNTL, BGMAC_PC_MTE);
-	bgmac_miiconfig(bgmac);
+	bgmac_miiconfig(bgmac); //DD still go through bcma core on register read write..
 	bgmac_phy_init(bgmac);
 
 	netdev_reset_queue(bgmac->net_dev);
@@ -1361,7 +1361,7 @@ static int bgmac_ioctl(struct net_device *net_dev, struct ifreq *ifr, int cmd)
 	if (!netif_running(net_dev))
 		return -EINVAL;
 
-	return phy_mii_ioctl(bgmac->phy_dev, ifr, cmd);
+	return phy_mii_ioctl(bgmac->phy_dev, ifr, cmd);//DD this is called into phy device layer..
 }
 
 static const struct net_device_ops bgmac_netdev_ops = {
@@ -1371,7 +1371,7 @@ static const struct net_device_ops bgmac_netdev_ops = {
 	.ndo_set_rx_mode	= bgmac_set_rx_mode,
 	.ndo_set_mac_address	= bgmac_set_mac_address,
 	.ndo_validate_addr	= eth_validate_addr,
-	.ndo_do_ioctl           = bgmac_ioctl,
+	.ndo_do_ioctl           = bgmac_ioctl,//DD this needs to looks up...
 };
 
 /**************************************************
@@ -1410,12 +1410,12 @@ static const struct ethtool_ops bgmac_ethtool_ops = {
 /**************************************************
  * MII
  **************************************************/
-
+//DD this is the MII interface for phy
 static int bgmac_mii_read(struct mii_bus *bus, int mii_id, int regnum)
 {
 	return bgmac_phy_read(bus->priv, mii_id, regnum);
 }
-
+//DD this is the MII interface also.
 static int bgmac_mii_write(struct mii_bus *bus, int mii_id, int regnum,
 			   u16 value)
 {
@@ -1456,12 +1456,13 @@ static int bgmac_fixed_phy_register(struct bgmac *bgmac)
 	struct phy_device *phy_dev;
 	int err;
 
-	phy_dev = fixed_phy_register(PHY_POLL, &fphy_status, NULL);
+	phy_dev = fixed_phy_register(PHY_POLL, &fphy_status, NULL); 
+	//DD by check http://lxr.free-electrons.com/source/drivers/net/phy/fixed.c?v=3.18#L236. This is actualy registery one phy device
 	if (!phy_dev || IS_ERR(phy_dev)) {
 		bgmac_err(bgmac, "Failed to register fixed PHY device\n");
 		return -ENODEV;
 	}
-
+    //DD what?? register one struct, and use it?? need google once
 	err = phy_connect_direct(bgmac->net_dev, phy_dev, bgmac_adjust_link,
 				 PHY_INTERFACE_MODE_MII);
 	if (err) {
@@ -1475,16 +1476,16 @@ static int bgmac_fixed_phy_register(struct bgmac *bgmac)
 }
 
 static int bgmac_mii_register(struct bgmac *bgmac)
-{
+{//DD hook up MII interface...  we already access phy by bcmac_read/write, why we still need this???
 	struct mii_bus *mii_bus;
 	struct phy_device *phy_dev;
 	char bus_id[MII_BUS_ID_SIZE + 3];
 	int i, err = 0;
 
 	if (bgmac_is_bcm4707_family(bgmac))
-		return bgmac_fixed_phy_register(bgmac);
+		return bgmac_fixed_phy_register(bgmac);//DD in this function, create phy dev, and hook and phy dev with netdev. MII looks handled in fix_phy device.c
 
-	mii_bus = mdiobus_alloc();
+	mii_bus = mdiobus_alloc(); //DD allocate mii structure
 	if (!mii_bus)
 		return -ENOMEM;
 
@@ -1492,8 +1493,8 @@ static int bgmac_mii_register(struct bgmac *bgmac)
 	sprintf(mii_bus->id, "%s-%d-%d", "bgmac", bgmac->core->bus->num,
 		bgmac->core->core_unit);
 	mii_bus->priv = bgmac;
-	mii_bus->read = bgmac_mii_read;
-	mii_bus->write = bgmac_mii_write;
+	mii_bus->read = bgmac_mii_read; //DD callback of MII
+	mii_bus->write = bgmac_mii_write; //DD callback of MII
 	mii_bus->parent = &bgmac->core->dev;
 	mii_bus->phy_mask = ~(1 << bgmac->phyaddr);
 
@@ -1505,7 +1506,7 @@ static int bgmac_mii_register(struct bgmac *bgmac)
 	for (i = 0; i < PHY_MAX_ADDR; i++)
 		mii_bus->irq[i] = PHY_POLL;
 
-	err = mdiobus_register(mii_bus);
+	err = mdiobus_register(mii_bus);//DD register MII bus
 	if (err) {
 		bgmac_err(bgmac, "Registration of mii bus failed\n");
 		goto err_free_irq;
@@ -1517,7 +1518,7 @@ static int bgmac_mii_register(struct bgmac *bgmac)
 	snprintf(bus_id, sizeof(bus_id), PHY_ID_FMT, mii_bus->id,
 		 bgmac->phyaddr);
 	phy_dev = phy_connect(bgmac->net_dev, bus_id, &bgmac_adjust_link,
-			      PHY_INTERFACE_MODE_MII);
+			      PHY_INTERFACE_MODE_MII);//DD connected to phy...
 	if (IS_ERR(phy_dev)) {
 		bgmac_err(bgmac, "PHY connecton failed\n");
 		err = PTR_ERR(phy_dev);
@@ -1596,7 +1597,7 @@ static int bgmac_probe(struct bcma_device *core)
 	bcma_core_enable(core, 0); 
 
 	/* Allocation and references */
-	net_dev = alloc_etherdev(sizeof(*bgmac)); //DD dangdang! allocate net dev.
+	net_dev = alloc_etherdev(sizeof(*bgmac)); //DD duangduang!!! allocate net dev.
 	if (!net_dev)
 		return -ENOMEM;
 	net_dev->netdev_ops = &bgmac_netdev_ops; //DD hook up netdev ops
@@ -1645,7 +1646,7 @@ static int bgmac_probe(struct bcma_device *core)
 		goto err_netdev_free;
 	}
 
-	bgmac_chip_reset(bgmac);
+	bgmac_chip_reset(bgmac); //DD 8/3 today, looking for lower MII and phy access. so, go deeper..
 
 	/* For Northstar, we have to take all GMAC core out of reset */
 	if (bgmac_is_bcm4707_family(bgmac)) {
@@ -1714,7 +1715,7 @@ static int bgmac_probe(struct bcma_device *core)
 		goto err_mii_unregister;
 	}
 
-	netif_carrier_off(net_dev);
+	netif_carrier_off(net_dev);//DD this is also one system call, but I don't know what's it is...
 
 	return 0;
 

@@ -474,7 +474,7 @@ static inline u32 bgmac_read(struct bgmac *bgmac, u16 offset)
 
 static inline void bgmac_write(struct bgmac *bgmac, u16 offset, u32 value)
 {
-	bcma_write32(bgmac->core, offset, value);
+	bcma_write32(bgmac->core, offset, value); //DD those looks like access register directly....
 }
 
 static inline void bgmac_maskset(struct bgmac *bgmac, u16 offset, u32 mask,
