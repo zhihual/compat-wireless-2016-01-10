@@ -294,7 +294,7 @@ static int b53_phy_config_init(struct phy_device *phydev)
 	/* force the ethX as alias */
 	dev->sw_dev.alias = phydev->attached_dev->name;
 
-	ret = b53_switch_register(dev);
+	ret = b53_switch_register(dev); //DD get phydev, hook up op, and do init
 	if (ret) {
 		dev_err(dev->dev, "failed to register switch: %i\n", ret);
 		return ret;

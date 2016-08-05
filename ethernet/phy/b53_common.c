@@ -1314,8 +1314,10 @@ static int b53_switch_init(struct b53_device *dev)
 	}
 
 	/* cpu port is always last */
-	sw_dev->ports = sw_dev->cpu_port + 1;
+	sw_dev->ports = sw_dev->cpu_port + 1;//DD hehe, CPU port.  cpu to access..
 	dev->enabled_ports |= BIT(sw_dev->cpu_port);
+
+    //DD allocate ports, vlan structures.
 
 	dev->ports = devm_kzalloc(dev->dev,
 				  sizeof(struct b53_port) * sw_dev->ports,
@@ -1329,10 +1331,12 @@ static int b53_switch_init(struct b53_device *dev)
 	if (!dev->vlans)
 		return -ENOMEM;
 
+    //DD buffers to save MIBs
 	dev->buf = devm_kzalloc(dev->dev, B53_BUF_SIZE, GFP_KERNEL);
 	if (!dev->buf)
 		return -ENOMEM;
 
+    
 	dev->reset_gpio = b53_switch_get_reset_gpio(dev);
 	if (dev->reset_gpio >= 0) {
 		ret = devm_gpio_request_one(dev->dev, dev->reset_gpio,
@@ -1341,7 +1345,7 @@ static int b53_switch_init(struct b53_device *dev)
 			return ret;
 	}
 
-	return b53_switch_reset(dev);
+	return b53_switch_reset(dev);//DD reset switch
 }
 
 struct b53_device *b53_switch_alloc(struct device *base, struct b53_io_ops *ops,
@@ -1362,7 +1366,7 @@ struct b53_device *b53_switch_alloc(struct device *base, struct b53_io_ops *ops,
 }
 EXPORT_SYMBOL(b53_switch_alloc);
 
-int b53_switch_detect(struct b53_device *dev)
+int b53_switch_detect(struct b53_device *dev)//DD detec switch??
 {
 	u32 id32;
 	u16 tmp;
@@ -1442,13 +1446,13 @@ int b53_switch_register(struct b53_device *dev)
 	if (!dev->chip_id && b53_switch_detect(dev))
 		return -EINVAL;
 
-	ret = b53_switch_init(dev);
+	ret = b53_switch_init(dev); //DD init done. sw and hw enabled.
 	if (ret)
 		return ret;
 
 	pr_info("found switch: %s, rev %i\n", dev->sw_dev.name, dev->core_rev);
 
-	return register_switch(&dev->sw_dev, NULL);
+	return register_switch(&dev->sw_dev, NULL);//DD after register done....
 }
 EXPORT_SYMBOL(b53_switch_register);
 
