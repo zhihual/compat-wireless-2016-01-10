@@ -38,7 +38,7 @@ struct netlink_sock {
 	struct netlink_callback	cb;
 	struct mutex		*cb_mutex;
 	struct mutex		cb_def_mutex;
-	void			(*netlink_rcv)(struct sk_buff *skb);
+	void			(*netlink_rcv)(struct sk_buff *skb); //OOO program style, inset function in structure
 	int			(*netlink_bind)(int group);
 	void			(*netlink_unbind)(int group);
 	struct module		*module;
@@ -54,7 +54,7 @@ struct netlink_sock {
 
 static inline struct netlink_sock *nlk_sk(struct sock *sk)
 {
-	return container_of(sk, struct netlink_sock, sk);
+	return container_of(sk, struct netlink_sock, sk);//DD get netlink_sock direct for sk..
 }
 
 static inline bool netlink_skb_is_mmaped(const struct sk_buff *skb)

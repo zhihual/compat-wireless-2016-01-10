@@ -1098,7 +1098,7 @@ static int netlink_insert(struct sock *sk, struct net *net, u32 portid)
 	if (BITS_PER_LONG > 32 && unlikely(table->hash.nelems >= UINT_MAX))
 		goto err;
 
-	nlk_sk(sk)->portid = portid;
+	nlk_sk(sk)->portid = portid; //DD sock remember portid.
 	sock_hold(sk);
 	rhashtable_insert(&table->hash, &nlk_sk(sk)->node, GFP_KERNEL);
 	err = 0;
@@ -1137,13 +1137,14 @@ static int __netlink_create(struct net *net, struct socket *sock,
 	struct sock *sk;
 	struct netlink_sock *nlk;
 
-	sock->ops = &netlink_ops;
+	sock->ops = &netlink_ops; //DD socket hook operations. 
+	                         
 
-	sk = sk_alloc(net, PF_NETLINK, GFP_KERNEL, &netlink_proto);
+	sk = sk_alloc(net, PF_NETLINK, GFP_KERNEL, &netlink_proto); //DD allocate sk. sk is sub socket.
 	if (!sk)
 		return -ENOMEM;
 
-	sock_init_data(sock, sk);
+	sock_init_data(sock, sk); //DD socket and sock init  in net/core/sock.c  point to each other..
 
 	nlk = nlk_sk(sk);
 	if (cb_mutex) {
@@ -1157,14 +1158,14 @@ static int __netlink_create(struct net *net, struct socket *sock,
 	mutex_init(&nlk->pg_vec_lock);
 #endif
 
-	sk->sk_destruct = netlink_sock_destruct;
-	sk->sk_protocol = protocol;
+	sk->sk_destruct = netlink_sock_destruct; //DD hook destructer
+	sk->sk_protocol = protocol; // DD register protocal
 	return 0;
 }
 
 static int netlink_create(struct net *net, struct socket *sock, int protocol,
 			  int kern)
-{
+{//DD create... even I don't know how to understand.  but, try to read...
 	struct module *module = NULL;
 	struct mutex *cb_mutex;
 	struct netlink_sock *nlk;
@@ -1201,7 +1202,7 @@ static int netlink_create(struct net *net, struct socket *sock, int protocol,
 	if (err < 0)
 		goto out;
 
-	err = __netlink_create(net, sock, cb_mutex, protocol);
+	err = __netlink_create(net, sock, cb_mutex, protocol);//DD importand function, but don't know how..
 	if (err < 0)
 		goto out_module;
 
@@ -1211,7 +1212,7 @@ static int netlink_create(struct net *net, struct socket *sock, int protocol,
 
 	nlk = nlk_sk(sock->sk);
 	nlk->module = module;
-	nlk->netlink_bind = bind;
+	nlk->netlink_bind = bind; //DD setup bind or unbind
 	nlk->netlink_unbind = unbind;
 out:
 	return err;
@@ -1289,7 +1290,7 @@ static int netlink_autobind(struct socket *sock)
 {
 	struct sock *sk = sock->sk;
 	struct net *net = sock_net(sk);
-	struct netlink_table *table = &nl_table[sk->sk_protocol];
+	struct netlink_table *table = &nl_table[sk->sk_protocol];//DD fetch table by protocal id..
 	s32 portid = task_tgid_vnr(current);
 	int err;
 	static s32 rover = -4097;
@@ -1306,7 +1307,7 @@ retry:
 		rcu_read_unlock();
 		netlink_table_ungrab();
 		goto retry;
-	}
+	}//DD not found..  new one
 	rcu_read_unlock();
 	netlink_table_ungrab();
 
@@ -1546,9 +1547,9 @@ static int netlink_connect(struct socket *sock, struct sockaddr *addr,
 	if (!nlk->portid)
 		err = netlink_autobind(sock);
 
-	if (err == 0) {
+	if (err == 0) { //DD if hook up success,  set portid and dst_group in nlk header
 		sk->sk_state	= NETLINK_CONNECTED;
-		nlk->dst_portid = nladdr->nl_pid;
+		nlk->dst_portid = nladdr->nl_pid; //DD not pid and portid in nlk are not same...
 		nlk->dst_group  = ffs(nladdr->nl_groups);
 	}
 
@@ -1581,7 +1582,7 @@ static struct sock *netlink_getsockbyportid(struct sock *ssk, u32 portid)
 	struct sock *sock;
 	struct netlink_sock *nlk;
 
-	sock = netlink_lookup(sock_net(ssk), ssk->sk_protocol, portid);
+	sock = netlink_lookup(sock_net(ssk), ssk->sk_protocol, portid); //DD should be using src protocal, and portid to find remote sock...
 	if (!sock)
 		return ERR_PTR(-ECONNREFUSED);
 
@@ -2437,6 +2438,244 @@ static void netlink_data_ready(struct sock *sk)
  *	queueing.
  */
 
+#if 0
+
+105 struct socket {
+106         socket_state            state;
+107 
+108         kmemcheck_bitfield_begin(type);
+109         short                   type;
+110         kmemcheck_bitfield_end(type);
+111 
+112         unsigned long           flags;
+113 
+114         struct socket_wq __rcu  *wq;
+115 
+116         struct file             *file;
+117         struct sock             *sk;
+118         const struct proto_ops  *ops;
+119 };
+
+
+220221 /**
+222   *     struct sock - network layer representation of sockets
+223   *     @__sk_common: shared layout with inet_timewait_sock
+224   *     @sk_shutdown: mask of %SEND_SHUTDOWN and/or %RCV_SHUTDOWN
+225   *     @sk_userlocks: %SO_SNDBUF and %SO_RCVBUF settings
+226   *     @sk_lock:       synchronizer
+227   *     @sk_rcvbuf: size of receive buffer in bytes
+228   *     @sk_wq: sock wait queue and async head
+229   *     @sk_rx_dst: receive input route used by early demux
+230   *     @sk_dst_cache: destination cache
+231   *     @sk_dst_lock: destination cache lock
+232   *     @sk_policy: flow policy
+233   *     @sk_receive_queue: incoming packets
+234   *     @sk_wmem_alloc: transmit queue bytes committed
+235   *     @sk_write_queue: Packet sending queue
+236   *     @sk_omem_alloc: "o" is "option" or "other"
+237   *     @sk_wmem_queued: persistent queue size
+238   *     @sk_forward_alloc: space allocated forward
+239   *     @sk_napi_id: id of the last napi context to receive data for sk
+240   *     @sk_ll_usec: usecs to busypoll when there is no data
+241   *     @sk_allocation: allocation mode
+242   *     @sk_pacing_rate: Pacing rate (if supported by transport/packet scheduler)
+243   *     @sk_max_pacing_rate: Maximum pacing rate (%SO_MAX_PACING_RATE)
+244   *     @sk_sndbuf: size of send buffer in bytes
+245   *     @sk_flags: %SO_LINGER (l_onoff), %SO_BROADCAST, %SO_KEEPALIVE,
+246   *                %SO_OOBINLINE settings, %SO_TIMESTAMPING settings
+247   *     @sk_no_check_tx: %SO_NO_CHECK setting, set checksum in TX packets
+248   *     @sk_no_check_rx: allow zero checksum in RX packets
+249   *     @sk_route_caps: route capabilities (e.g. %NETIF_F_TSO)
+250   *     @sk_route_nocaps: forbidden route capabilities (e.g NETIF_F_GSO_MASK)
+251   *     @sk_gso_type: GSO type (e.g. %SKB_GSO_TCPV4)
+252   *     @sk_gso_max_size: Maximum GSO segment size to build
+253   *     @sk_gso_max_segs: Maximum number of GSO segments
+254   *     @sk_lingertime: %SO_LINGER l_linger setting
+255   *     @sk_backlog: always used with the per-socket spinlock held
+256   *     @sk_callback_lock: used with the callbacks in the end of this struct
+257   *     @sk_error_queue: rarely used
+258   *     @sk_prot_creator: sk_prot of original sock creator (see ipv6_setsockopt,
+259   *                       IPV6_ADDRFORM for instance)
+260   *     @sk_err: last error
+261   *     @sk_err_soft: errors that don't cause failure but are the cause of a
+262   *                   persistent failure not just 'timed out'
+263   *     @sk_drops: raw/udp drops counter
+264   *     @sk_ack_backlog: current listen backlog
+265   *     @sk_max_ack_backlog: listen backlog set in listen()
+266   *     @sk_priority: %SO_PRIORITY setting
+267   *     @sk_cgrp_prioidx: socket group's priority map index
+268   *     @sk_type: socket type (%SOCK_STREAM, etc)
+269   *     @sk_protocol: which protocol this socket belongs in this network family
+270   *     @sk_peer_pid: &struct pid for this socket's peer
+271   *     @sk_peer_cred: %SO_PEERCRED setting
+272   *     @sk_rcvlowat: %SO_RCVLOWAT setting
+273   *     @sk_rcvtimeo: %SO_RCVTIMEO setting
+274   *     @sk_sndtimeo: %SO_SNDTIMEO setting
+275   *     @sk_rxhash: flow hash received from netif layer
+276   *     @sk_txhash: computed flow hash for use on transmit
+277   *     @sk_filter: socket filtering instructions
+278   *     @sk_protinfo: private area, net family specific, when not using slab
+279   *     @sk_timer: sock cleanup timer
+280   *     @sk_stamp: time stamp of last packet received
+281   *     @sk_tsflags: SO_TIMESTAMPING socket options
+282   *     @sk_tskey: counter to disambiguate concurrent tstamp requests
+283   *     @sk_socket: Identd and reporting IO signals
+284   *     @sk_user_data: RPC layer private data
+285   *     @sk_frag: cached page frag
+286   *     @sk_peek_off: current peek_offset value
+287   *     @sk_send_head: front of stuff to transmit
+288   *     @sk_security: used by security modules
+289   *     @sk_mark: generic packet mark
+290   *     @sk_classid: this socket's cgroup classid
+291   *     @sk_cgrp: this socket's cgroup-specific proto data
+292   *     @sk_write_pending: a write to stream socket waits to start
+293   *     @sk_state_change: callback to indicate change in the state of the sock
+294   *     @sk_data_ready: callback to indicate there is data to be processed
+295   *     @sk_write_space: callback to indicate there is bf sending space available
+296   *     @sk_error_report: callback to indicate errors (e.g. %MSG_ERRQUEUE)
+297   *     @sk_backlog_rcv: callback to process the backlog
+298   *     @sk_destruct: called at sock freeing time, i.e. when all refcnt == 0
+299  */
+300 struct sock {
+301         /*
+302          * Now struct inet_timewait_sock also uses sock_common, so please just
+303          * don't add nothing before this first member (__sk_common) --acme
+304          */
+305         struct sock_common      __sk_common;
+306 #define sk_node                 __sk_common.skc_node
+307 #define sk_nulls_node           __sk_common.skc_nulls_node
+308 #define sk_refcnt               __sk_common.skc_refcnt
+309 #define sk_tx_queue_mapping     __sk_common.skc_tx_queue_mapping
+310 
+311 #define sk_dontcopy_begin       __sk_common.skc_dontcopy_begin
+312 #define sk_dontcopy_end         __sk_common.skc_dontcopy_end
+313 #define sk_hash                 __sk_common.skc_hash
+314 #define sk_portpair             __sk_common.skc_portpair
+315 #define sk_num                  __sk_common.skc_num
+316 #define sk_dport                __sk_common.skc_dport
+317 #define sk_addrpair             __sk_common.skc_addrpair
+318 #define sk_daddr                __sk_common.skc_daddr
+319 #define sk_rcv_saddr            __sk_common.skc_rcv_saddr
+320 #define sk_family               __sk_common.skc_family
+321 #define sk_state                __sk_common.skc_state
+322 #define sk_reuse                __sk_common.skc_reuse
+323 #define sk_reuseport            __sk_common.skc_reuseport
+324 #define sk_ipv6only             __sk_common.skc_ipv6only
+325 #define sk_bound_dev_if         __sk_common.skc_bound_dev_if
+326 #define sk_bind_node            __sk_common.skc_bind_node
+327 #define sk_prot                 __sk_common.skc_prot
+328 #define sk_net                  __sk_common.skc_net
+329 #define sk_v6_daddr             __sk_common.skc_v6_daddr
+330 #define sk_v6_rcv_saddr __sk_common.skc_v6_rcv_saddr
+331 
+332         socket_lock_t           sk_lock;
+333         struct sk_buff_head     sk_receive_queue;
+334         /*
+335          * The backlog queue is special, it is always used with
+336          * the per-socket spinlock held and requires low latency
+337          * access. Therefore we special case it's implementation.
+338          * Note : rmem_alloc is in this structure to fill a hole
+339          * on 64bit arches, not because its logically part of
+340          * backlog.
+341          */
+342         struct {
+343                 atomic_t        rmem_alloc;
+344                 int             len;
+345                 struct sk_buff  *head;
+346                 struct sk_buff  *tail;
+347         } sk_backlog;
+348 #define sk_rmem_alloc sk_backlog.rmem_alloc
+349         int                     sk_forward_alloc;
+350 #ifdef CONFIG_RPS
+351         __u32                   sk_rxhash;
+352 #endif
+353         __u32                   sk_txhash;
+354 #ifdef CONFIG_NET_RX_BUSY_POLL
+355         unsigned int            sk_napi_id;
+356         unsigned int            sk_ll_usec;
+357 #endif
+358         atomic_t                sk_drops;
+359         int                     sk_rcvbuf;
+360 
+361         struct sk_filter __rcu  *sk_filter;
+362         struct socket_wq __rcu  *sk_wq;
+363 
+364 #ifdef CONFIG_XFRM
+365         struct xfrm_policy      *sk_policy[2];
+366 #endif
+367         unsigned long           sk_flags;
+368         struct dst_entry        *sk_rx_dst;
+369         struct dst_entry __rcu  *sk_dst_cache;
+370         spinlock_t              sk_dst_lock;
+371         atomic_t                sk_wmem_alloc;
+372         atomic_t                sk_omem_alloc;
+373         int                     sk_sndbuf;
+374         struct sk_buff_head     sk_write_queue;
+375         kmemcheck_bitfield_begin(flags);
+376         unsigned int            sk_shutdown  : 2,
+377                                 sk_no_check_tx : 1,
+378                                 sk_no_check_rx : 1,
+379                                 sk_userlocks : 4,
+380                                 sk_protocol  : 8,
+381                                 sk_type      : 16;
+382         kmemcheck_bitfield_end(flags);
+383         int                     sk_wmem_queued;
+384         gfp_t                   sk_allocation;
+385         u32                     sk_pacing_rate; /* bytes per second */
+386         u32                     sk_max_pacing_rate;
+387         netdev_features_t       sk_route_caps;
+388         netdev_features_t       sk_route_nocaps;
+389         int                     sk_gso_type;
+390         unsigned int            sk_gso_max_size;
+391         u16                     sk_gso_max_segs;
+392         int                     sk_rcvlowat;
+393         unsigned long           sk_lingertime;
+394         struct sk_buff_head     sk_error_queue;
+395         struct proto            *sk_prot_creator;
+396         rwlock_t                sk_callback_lock;
+397         int                     sk_err,
+398                                 sk_err_soft;
+399         unsigned short          sk_ack_backlog;
+400         unsigned short          sk_max_ack_backlog;
+401         __u32                   sk_priority;
+402 #if IS_ENABLED(CONFIG_CGROUP_NET_PRIO)
+403         __u32                   sk_cgrp_prioidx;
+404 #endif
+405         struct pid              *sk_peer_pid;
+406         const struct cred       *sk_peer_cred;
+407         long                    sk_rcvtimeo;
+408         long                    sk_sndtimeo;
+409         void                    *sk_protinfo;
+410         struct timer_list       sk_timer;
+411         ktime_t                 sk_stamp;
+412         u16                     sk_tsflags;
+413         u32                     sk_tskey;
+414         struct socket           *sk_socket;
+415         void                    *sk_user_data;
+416         struct page_frag        sk_frag;
+417         struct sk_buff          *sk_send_head;
+418         __s32                   sk_peek_off;
+419         int                     sk_write_pending;
+420 #ifdef CONFIG_SECURITY
+421         void                    *sk_security;
+422 #endif
+423         __u32                   sk_mark;
+424         u32                     sk_classid;
+425         struct cg_proto         *sk_cgrp;
+426         void                    (*sk_state_change)(struct sock *sk);
+427         void                    (*sk_data_ready)(struct sock *sk);
+428         void                    (*sk_write_space)(struct sock *sk);
+429         void                    (*sk_error_report)(struct sock *sk);
+430         int                     (*sk_backlog_rcv)(struct sock *sk,
+431                                                   struct sk_buff *skb);
+432         void                    (*sk_destruct)(struct sock *sk);
+433 };
+
+
+
+#endif
+ 
+
 struct sock *
 __netlink_kernel_create(struct net *net, int unit, struct module *module,
 			struct netlink_kernel_cfg *cfg)
@@ -2453,7 +2692,7 @@ __netlink_kernel_create(struct net *net, int unit, struct module *module,
 	if (unit < 0 || unit >= MAX_LINKS)
 		return NULL;
 
-	if (sock_create_lite(PF_NETLINK, SOCK_DGRAM, unit, &sock))
+	if (sock_create_lite(PF_NETLINK, SOCK_DGRAM, unit, &sock))//DD comes with sock...
 		return NULL;
 
 	/*
@@ -2462,7 +2701,7 @@ __netlink_kernel_create(struct net *net, int unit, struct module *module,
 	 * So we create one inside init_net and the move it to net.
 	 */
 
-	if (__netlink_create(&init_net, sock, cb_mutex, unit) < 0)
+	if (__netlink_create(&init_net, sock, cb_mutex, unit) < 0) //DD attention,, sock and socket are two different kind.
 		goto out_sock_release_nosk;
 
 	sk = sock->sk;
@@ -2473,11 +2712,11 @@ __netlink_kernel_create(struct net *net, int unit, struct module *module,
 	else
 		groups = cfg->groups;
 
-	listeners = kzalloc(sizeof(*listeners) + NLGRPSZ(groups), GFP_KERNEL);
+	listeners = kzalloc(sizeof(*listeners) + NLGRPSZ(groups), GFP_KERNEL);//DD alloc listener.
 	if (!listeners)
 		goto out_sock_release;
 
-	sk->sk_data_ready = netlink_data_ready;
+	sk->sk_data_ready = netlink_data_ready; 
 	if (cfg && cfg->input)
 		nlk_sk(sk)->netlink_rcv = cfg->input;
 
@@ -2764,7 +3003,7 @@ error_free:
 EXPORT_SYMBOL(__netlink_dump_start);
 
 void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err)
-{
+{ //DD message to send ack back to sender..
 	struct sk_buff *skb;
 	struct nlmsghdr *rep;
 	struct nlmsgerr *errmsg;
@@ -2776,10 +3015,10 @@ void netlink_ack(struct sk_buff *in_skb, struct nlmsghdr *nlh, int err)
 
 	skb = netlink_alloc_skb(in_skb->sk, nlmsg_total_size(payload),
 				NETLINK_CB(in_skb).portid, GFP_KERNEL);
-	if (!skb) {
+	if (!skb) {//DD 
 		struct sock *sk;
 
-		sk = netlink_lookup(sock_net(in_skb->sk),
+		sk = netlink_lookup(sock_net(in_skb->sk), //DD one sk. just in case error happending...
 				    in_skb->sk->sk_protocol,
 				    NETLINK_CB(in_skb).portid);
 		if (sk) {
@@ -3088,16 +3327,16 @@ static void __init netlink_add_usersock_entry(void)
 	struct listeners *listeners;
 	int groups = 32;
 
-	listeners = kzalloc(sizeof(*listeners) + NLGRPSZ(groups), GFP_KERNEL);
+	listeners = kzalloc(sizeof(*listeners) + NLGRPSZ(groups), GFP_KERNEL);//DD allocate listener body
 	if (!listeners)
 		panic("netlink_add_usersock_entry: Cannot allocate listeners\n");
 
-	netlink_table_grab();
+	netlink_table_grab(); 
 
 	nl_table[NETLINK_USERSOCK].groups = groups;
 	rcu_assign_pointer(nl_table[NETLINK_USERSOCK].listeners, listeners);
-	nl_table[NETLINK_USERSOCK].module = THIS_MODULE;
-	nl_table[NETLINK_USERSOCK].registered = 1;
+	nl_table[NETLINK_USERSOCK].module = THIS_MODULE;   //DD nl_table operation..
+	nl_table[NETLINK_USERSOCK].registered = 1; 
 	nl_table[NETLINK_USERSOCK].flags = NL_CFG_F_NONROOT_SEND;
 
 	netlink_table_ungrab();
@@ -3111,8 +3350,8 @@ static struct pernet_operations __net_initdata netlink_net_ops = {
 static int __init netlink_proto_init(void)
 {
 	int i;
-	int err = proto_register(&netlink_proto, 0);
-	struct rhashtable_params ht_params = {
+	int err = proto_register(&netlink_proto, 0); //DD register proto...  this is for 3rd layer?? need deeper dig out
+	struct rhashtable_params ht_params = {       //DD by checking sock.c  it's add prot int prot->node.
 		.head_offset = offsetof(struct netlink_sock, node),
 		.key_offset = offsetof(struct netlink_sock, portid),
 		.key_len = sizeof(u32), /* portid */
@@ -3128,7 +3367,8 @@ static int __init netlink_proto_init(void)
 
 	BUILD_BUG_ON(sizeof(struct netlink_skb_parms) > FIELD_SIZEOF(struct sk_buff, cb));
 
-	nl_table = kcalloc(MAX_LINKS, sizeof(*nl_table), GFP_KERNEL);
+	nl_table = kcalloc(MAX_LINKS, sizeof(*nl_table), GFP_KERNEL);//DD give nl_talbe memory. body.. MAX_LINKS.. notice this..
+    //DD this is allocate size of arrarry.
 	if (!nl_table)
 		goto panic;
 
@@ -3145,8 +3385,10 @@ static int __init netlink_proto_init(void)
 
 	netlink_add_usersock_entry();
 
-	sock_register(&netlink_family_ops);
-	register_pernet_subsys(&netlink_net_ops);
+	sock_register(&netlink_family_ops); //DD protocal, sock ops,  net ops...those 3 need be registered.
+	                                    //DD under net/socket. give global net_families hook ops...
+	register_pernet_subsys(&netlink_net_ops); //DD call netlink_net_init in function...
+	                                          //DD net, belongs to net_namespace.h scope. core....hook up.
 	/* The netlink device handler may be needed early. */
 	rtnetlink_init();
 out:

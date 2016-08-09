@@ -536,7 +536,8 @@ static int genl_lock_done(struct netlink_callback *cb)
 static int genl_family_rcv_msg(struct genl_family *family,
 			       struct sk_buff *skb,
 			       struct nlmsghdr *nlh)
-{
+{//DD ok, swconfig use generic netlink family, and registery some operations in therer.
+ //DD and, this is the fucntion, we can call to access 
 	const struct genl_ops *ops;
 	struct net *net = sock_net(skb->sk);
 	struct genl_info info;
@@ -626,10 +627,10 @@ static int genl_family_rcv_msg(struct genl_family *family,
 			goto out;
 	}
 
-	err = ops->doit(skb, &info);
+	err = ops->doit(skb, &info);//DD call something
 
 	if (family->post_doit)
-		family->post_doit(ops, skb, &info);
+		family->post_doit(ops, skb, &info); //DD post do something...
 
 out:
 	if (family->parallel_ops)
