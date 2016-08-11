@@ -814,7 +814,7 @@ static int bgmac_phy_write(struct bgmac *bgmac, u8 phyaddr, u8 reg, u16 value)
 	tmp = bcma_read32(core, phy_ctl_addr);
 	tmp &= ~BGMAC_PC_EPA_MASK;
 	tmp |= phyaddr;
-	bcma_write32(core, phy_ctl_addr, tmp);
+	bcma_write32(core, phy_ctl_addr, tmp); //DD note, just program register by bcma bus...
 
 	bgmac_write(bgmac, BGMAC_INT_STATUS, BGMAC_IS_MDIO);
 	if (bgmac_read(bgmac, BGMAC_INT_STATUS) & BGMAC_IS_MDIO)
@@ -1597,7 +1597,7 @@ static int bgmac_probe(struct bcma_device *core)
 	bcma_core_enable(core, 0); 
 
 	/* Allocation and references */
-	net_dev = alloc_etherdev(sizeof(*bgmac)); //DD duangduang!!! allocate net dev.
+	net_dev = alloc_etherdev(sizeof(*bgmac)); //DD duangduang!!! allocate net dev.  eth%d is defined here. '0' is looked in the system.
 	if (!net_dev)
 		return -ENOMEM;
 	net_dev->netdev_ops = &bgmac_netdev_ops; //DD hook up netdev ops
