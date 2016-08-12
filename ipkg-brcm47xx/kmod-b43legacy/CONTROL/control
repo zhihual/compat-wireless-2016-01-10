@@ -1,9 +1,0 @@
-Package: kmod-b43legacy
-Version: 3.18.29+2016-01-10-1
-Depends: kernel (=3.18.29-1-323ddff3815060f451000e3062dd4e1d), kmod-mac80211, b43legacy-firmware
-Source: package/kernel/mac80211
-Section: kernel
-Maintainer: Felix Fietkau <nbd@openwrt.org>
-Architecture: brcm47xx
-Installed-Size: 49066
-Description:  Kernel module for Broadcom 43xx-legacy wireless support (mac80211 stack) new
