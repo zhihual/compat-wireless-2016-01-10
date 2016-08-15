@@ -353,7 +353,7 @@ int br_add_bridge(struct net *net, const char *name)
 	dev_net_set(dev, net);
 	dev->rtnl_link_ops = &br_link_ops;
 
-	res = register_netdev(dev);
+	res = register_netdev(dev); //DD registered bridge
 	if (res)
 		free_netdev(dev);
 	return res;
@@ -429,7 +429,7 @@ netdev_features_t br_features_recompute(struct net_bridge *br,
 }
 
 /* called with RTNL */
-int br_add_if(struct net_bridge *br, struct net_device *dev)
+int br_add_if(struct net_bridge *br, struct net_device *dev) //DD add port to bridge
 {
 	struct net_bridge_port *p;
 	int err = 0;
@@ -453,7 +453,7 @@ int br_add_if(struct net_bridge *br, struct net_device *dev)
 	if (dev->priv_flags & IFF_DONT_BRIDGE)
 		return -EOPNOTSUPP;
 
-	p = new_nbp(br, dev);
+	p = new_nbp(br, dev); //DD give it one port structure.
 	if (IS_ERR(p))
 		return PTR_ERR(p);
 
@@ -476,11 +476,11 @@ int br_add_if(struct net_bridge *br, struct net_device *dev)
 	if (err)
 		goto err3;
 
-	err = netdev_rx_handler_register(dev, br_handle_frame, p);
+	err = netdev_rx_handler_register(dev, br_handle_frame, p); //DD register frame handler
 	if (err)
 		goto err4;
 
-	dev->priv_flags |= IFF_BRIDGE_PORT;
+	dev->priv_flags |= IFF_BRIDGE_PORT; //DD set to brigde port
 
 	err = netdev_master_upper_dev_link(dev, br->dev);
 	if (err)
@@ -514,9 +514,9 @@ int br_add_if(struct net_bridge *br, struct net_device *dev)
 	br_ifinfo_notify(RTM_NEWLINK, p);
 
 	if (changed_addr)
-		call_netdevice_notifiers(NETDEV_CHANGEADDR, br->dev);
+		call_netdevice_notifiers(NETDEV_CHANGEADDR, br->dev); //DD mac addr change..
 
-	dev_set_mtu(br->dev, br_min_mtu(br));
+	dev_set_mtu(br->dev, br_min_mtu(br)); //DD mini MTU 
 
 	kobject_uevent(&p->kobj, KOBJ_ADD);
 

@@ -147,7 +147,7 @@ int register_vlan_dev(struct net_device *dev)
 	struct vlan_group *grp;
 	int err;
 
-	err = vlan_vid_add(real_dev, vlan->vlan_proto, vlan_id);
+	err = vlan_vid_add(real_dev, vlan->vlan_proto, vlan_id); //DD id added
 	if (err)
 		return err;
 
@@ -170,7 +170,7 @@ int register_vlan_dev(struct net_device *dev)
 		goto out_uninit_mvrp;
 
 	vlan->nest_level = dev_get_nest_level(real_dev, is_vlan_dev) + 1;
-	err = register_netdevice(dev);
+	err = register_netdevice(dev); //DD register device
 	if (err < 0)
 		goto out_uninit_mvrp;
 
@@ -251,7 +251,7 @@ static int register_vlan_device(struct net_device *real_dev, u16 vlan_id)
 	}
 
 	new_dev = alloc_netdev(sizeof(struct vlan_dev_priv), name,
-			       NET_NAME_UNKNOWN, vlan_setup);
+			       NET_NAME_UNKNOWN, vlan_setup); //DD by read guide, this is key function
 
 	if (new_dev == NULL)
 		return -ENOBUFS;
@@ -266,7 +266,7 @@ static int register_vlan_device(struct net_device *real_dev, u16 vlan_id)
 	vlan = vlan_dev_priv(new_dev);
 	vlan->vlan_proto = htons(ETH_P_8021Q);
 	vlan->vlan_id = vlan_id;
-	vlan->real_dev = real_dev;
+	vlan->real_dev = real_dev; //DD point to real dev
 	vlan->dent = NULL;
 	vlan->flags = VLAN_FLAG_REORDER_HDR;
 

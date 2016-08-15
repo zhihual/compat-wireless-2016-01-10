@@ -3692,7 +3692,7 @@ ncls:
 	if (pfmemalloc && !skb_pfmemalloc_protocol(skb))
 		goto drop;
 
-	if (vlan_tx_tag_present(skb)) {
+	if (vlan_tx_tag_present(skb)) { //DD if have vlan
 		if (pt_prev) {
 			ret = deliver_skb(skb, pt_prev, orig_dev);
 			pt_prev = NULL;

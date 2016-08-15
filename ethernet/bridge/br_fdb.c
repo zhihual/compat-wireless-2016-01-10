@@ -346,7 +346,7 @@ void br_fdb_delete_by_port(struct net_bridge *br,
 struct net_bridge_fdb_entry *__br_fdb_get(struct net_bridge *br,
 					  const unsigned char *addr,
 					  __u16 vid)
-{
+{ //DD this is the function, which bridge looking for the dest port to send packets out.
 	struct net_bridge_fdb_entry *fdb;
 
 	hlist_for_each_entry_rcu(fdb,
@@ -522,7 +522,7 @@ static int fdb_insert(struct net_bridge *br, struct net_bridge_port *source,
 /* Add entry for local address of interface */
 int br_fdb_insert(struct net_bridge *br, struct net_bridge_port *source,
 		  const unsigned char *addr, u16 vid)
-{
+{//DD add one data base. for local port..
 	int ret;
 
 	spin_lock_bh(&br->hash_lock);

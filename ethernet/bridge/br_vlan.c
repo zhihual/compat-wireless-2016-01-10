@@ -67,7 +67,7 @@ static int __vlan_add(struct net_port_vlans *v, u16 vid, u16 flags)
 			return err;
 	}
 
-	err = br_fdb_insert(br, p, dev->dev_addr, vid);
+	err = br_fdb_insert(br, p, dev->dev_addr, vid); //DD add one record in...
 	if (err) {
 		br_err(br, "failed insert local address into bridge "
 		       "forwarding table\n");
@@ -648,7 +648,7 @@ int nbp_vlan_add(struct net_bridge_port *port, u16 vid, u16 flags)
 
 	pv = rtnl_dereference(port->vlan_info);
 	if (pv)
-		return __vlan_add(pv, vid, flags);
+		return __vlan_add(pv, vid, flags); //DD this is based on vid
 
 	/* Create port vlan infomration
 	 */

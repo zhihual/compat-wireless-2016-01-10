@@ -5,7 +5,7 @@
 #include <linux/export.h>
 #include "vlan.h"
 
-bool vlan_do_receive(struct sk_buff **skbp)
+bool vlan_do_receive(struct sk_buff **skbp) //DD vlan receive
 {
 	struct sk_buff *skb = *skbp;
 	__be16 vlan_proto = skb->vlan_proto;
@@ -48,7 +48,7 @@ bool vlan_do_receive(struct sk_buff **skbp)
 	}
 
 	skb->priority = vlan_get_ingress_priority(vlan_dev, skb->vlan_tci);
-	skb->vlan_tci = 0;
+	skb->vlan_tci = 0; //DD priority
 
 	rx_stats = this_cpu_ptr(vlan_dev_priv(vlan_dev)->vlan_pcpu_stats);
 

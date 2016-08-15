@@ -347,7 +347,7 @@ static int old_deviceless(struct net *net, void __user *uarg)
 	return -EOPNOTSUPP;
 }
 
-int br_ioctl_deviceless_stub(struct net *net, unsigned int cmd, void __user *uarg)
+int br_ioctl_deviceless_stub(struct net *net, unsigned int cmd, void __user *uarg) //DD this is one key step in guide
 {
 	switch (cmd) {
 	case SIOCGIFBR:

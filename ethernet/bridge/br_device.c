@@ -351,7 +351,7 @@ static struct device_type br_type = {
 	.name	= "bridge",
 };
 
-void br_dev_setup(struct net_device *dev)
+void br_dev_setup(struct net_device *dev) //DD bridge key function
 {
 	struct net_bridge *br = netdev_priv(dev);
 
