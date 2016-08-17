@@ -236,23 +236,23 @@ int system_init(void)
 	static struct event_socket rtnl_event;
 	static struct event_socket hotplug_event;
 
-	sock_ioctl = socket(AF_LOCAL, SOCK_DGRAM, 0);
+	sock_ioctl = socket(AF_LOCAL, SOCK_DGRAM, 0); //DD open two sockets AF_LOCAL
 	system_fd_set_cloexec(sock_ioctl);
 
 	// Prepare socket for routing / address control
-	sock_rtnl = create_socket(NETLINK_ROUTE, 0);
+	sock_rtnl = create_socket(NETLINK_ROUTE, 0); //DD open NETLINK_ROUTE
 	if (!sock_rtnl)
 		return -1;
 
-	if (!create_event_socket(&rtnl_event, NETLINK_ROUTE, cb_rtnl_event))
+	if (!create_event_socket(&rtnl_event, NETLINK_ROUTE, cb_rtnl_event)) //DD socket event handler
 		return -1;
 
 	if (!create_raw_event_socket(&hotplug_event, NETLINK_KOBJECT_UEVENT, 1,
-	                             handle_hotplug_event, 0))
+	                             handle_hotplug_event, 0)) //DD also..
 		return -1;
 
 	// Receive network link events form kernel
-	nl_socket_add_membership(rtnl_event.sock, RTNLGRP_LINK);
+	nl_socket_add_membership(rtnl_event.sock, RTNLGRP_LINK);//DD message from kernel...
 
 	return 0;
 }

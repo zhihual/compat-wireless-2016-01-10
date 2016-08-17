@@ -244,7 +244,7 @@ static int usage(const char *progname)
 static void
 netifd_handle_signal(int signo)
 {
-	uloop_end();
+	uloop_end(); //DD here is the end.
 }
 
 static void
@@ -273,7 +273,7 @@ netifd_kill_processes(void)
 		netifd_kill_process(proc);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char **argv)//DD this is netifd entry point 
 {
 	const char *socket = NULL;
 	int ch;
@@ -319,13 +319,13 @@ int main(int argc, char **argv)
 		openlog("netifd", 0, LOG_DAEMON);
 
 	netifd_setup_signals();
-	if (netifd_ubus_init(socket) < 0) {
+	if (netifd_ubus_init(socket) < 0) { //DD face engineer
 		fprintf(stderr, "Failed to connect to ubus\n");
 		return 1;
 	}
 
 	proto_shell_init();
-	wireless_init();
+	wireless_init(); //DD somthing with wireless handler
 
 	if (system_init()) {
 		fprintf(stderr, "Failed to initialize system control\n");

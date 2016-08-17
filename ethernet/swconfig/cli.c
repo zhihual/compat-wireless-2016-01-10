@@ -215,18 +215,19 @@ int main(int argc, char **argv)
 	char *cvalue = NULL;
 	char *csegment = NULL;
 
+    //DD this is the code to get under layer switch SWITCH_CMD_GET_SWITCH
 	if((argc == 2) && !strcmp(argv[1], "list")) {
 		swlib_list();
 		return 0;
 	}
 
-	if(argc < 4)
+	if(argc < 4)//DD mini argc > 4
 		print_usage();
 
-	if(strcmp(argv[1], "dev"))
+	if(strcmp(argv[1], "dev")) //DD first arg should be dev
 		print_usage();
 
-	cdev = argv[2];
+	cdev = argv[2]; //DD next arg
 
 	for(i = 3; i < argc; i++)
 	{
@@ -234,23 +235,23 @@ int main(int argc, char **argv)
 		if (cmd != CMD_NONE) {
 			print_usage();
 		} else if (!strcmp(arg, "port") && i+1 < argc) {
-			cport = atoi(argv[++i]);
+			cport = atoi(argv[++i]); //DD if port, get port
 		} else if (!strcmp(arg, "vlan") && i+1 < argc) {
-			cvlan = atoi(argv[++i]);
+			cvlan = atoi(argv[++i]);//DD if vlan, get vlan
 		} else if (!strcmp(arg, "help")) {
-			cmd = CMD_HELP;
+			cmd = CMD_HELP; //DD get command
 		} else if (!strcmp(arg, "set") && i+1 < argc) {
 			cmd = CMD_SET;
-			ckey = argv[++i];
+			ckey = argv[++i]; //DD key
 			if (i+1 < argc)
 				cvalue = argv[++i];
 		} else if (!strcmp(arg, "get") && i+1 < argc) {
 			cmd = CMD_GET;
-			ckey = argv[++i];
+			ckey = argv[++i]; //DD get value
 		} else if (!strcmp(arg, "load") && i+1 < argc) {
 			if ((cport >= 0) || (cvlan >= 0))
 				print_usage();
-			cmd = CMD_LOAD;
+			cmd = CMD_LOAD; 
 			ckey = argv[++i];
 		} else if (!strcmp(arg, "portmap")) {
 			if (i + 1 < argc)
@@ -263,12 +264,13 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if (cmd == CMD_NONE)
+    //DD ok, here we start..
+	if (cmd == CMD_NONE) 
 		print_usage();
 	if (cport > -1 && cvlan > -1)
 		print_usage();
 
-	dev = swlib_connect(cdev);
+	dev = swlib_connect(cdev); //DD get ports, vlans numbers.
 	if (!dev) {
 		fprintf(stderr, "Failed to connect to the switch. Use the \"list\" command to see which switches are available.\n");
 		return 1;
@@ -276,7 +278,7 @@ int main(int argc, char **argv)
 
 	swlib_scan(dev);
 
-	if (cmd == CMD_GET || cmd == CMD_SET) {
+	if (cmd == CMD_GET || cmd == CMD_SET) { //DD get set
 		if(cport > -1)
 			a = swlib_lookup_attr(dev, SWLIB_ATTR_GROUP_PORT, ckey);
 		else if(cvlan > -1)
@@ -302,7 +304,7 @@ int main(int argc, char **argv)
 		if(cvlan > -1)
 			cport = cvlan;
 
-		if(swlib_set_attr_string(dev, a, cport, cvalue) < 0)
+		if(swlib_set_attr_string(dev, a, cport, cvalue) < 0) //DD changed the value fetched from bottom.
 		{
 			fprintf(stderr, "failed\n");
 			retval = -1;
@@ -324,7 +326,7 @@ int main(int argc, char **argv)
 		putchar('\n');
 		break;
 	case CMD_LOAD:
-		swconfig_load_uci(dev, ckey);
+		swconfig_load_uci(dev, ckey); //DD this is the load...
 		break;
 	case CMD_HELP:
 		list_attributes(dev);

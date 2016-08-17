@@ -398,7 +398,7 @@ int swlib_set_attr_string(struct switch_dev *dev, struct switch_attr *a, int por
 				ptr++;
 			val.len++;
 		}
-		val.value.ports = ports;
+		val.value.ports = ports; //DD allocate ports. and move on..
 		break;
 	case SWITCH_TYPE_NOVAL:
 		if (str && !strcmp(str, "0"))
@@ -443,7 +443,7 @@ add_attr(struct nl_msg *msg, void *ptr)
 			genlmsg_attrlen(gnlh, 0), NULL) < 0)
 		goto done;
 
-	new = swlib_alloc(sizeof(struct switch_attr));
+	new = swlib_alloc(sizeof(struct switch_attr)); //allocate attr
 	if (!new)
 		goto done;
 
@@ -455,7 +455,7 @@ add_attr(struct nl_msg *msg, void *ptr)
 		arg->prev = *arg->head;
 	}
 	*arg->head = new;
-	arg->head = &new->next;
+	arg->head = &new->next; //DD finally, attrible is link list
 
 	if (tb[SWITCH_ATTR_OP_ID])
 		new->id = nla_get_u32(tb[SWITCH_ATTR_OP_ID]);
@@ -483,17 +483,17 @@ swlib_scan(struct switch_dev *dev)
 	arg.id = dev->id;
 	arg.prev = NULL;
 	arg.head = &dev->ops;
-	swlib_call(SWITCH_CMD_LIST_GLOBAL, add_attr, add_id, &arg);
+	swlib_call(SWITCH_CMD_LIST_GLOBAL, add_attr, add_id, &arg);//DD call for global
 
 	arg.atype = SWLIB_ATTR_GROUP_PORT;
 	arg.prev = NULL;
 	arg.head = &dev->port_ops;
-	swlib_call(SWITCH_CMD_LIST_PORT, add_attr, add_id, &arg);
+	swlib_call(SWITCH_CMD_LIST_PORT, add_attr, add_id, &arg);//DD call for port
 
 	arg.atype = SWLIB_ATTR_GROUP_VLAN;
 	arg.prev = NULL;
 	arg.head = &dev->vlan_ops;
-	swlib_call(SWITCH_CMD_LIST_VLAN, add_attr, add_id, &arg);
+	swlib_call(SWITCH_CMD_LIST_VLAN, add_attr, add_id, &arg); //DD call for vlan
 
 	return 0;
 }
@@ -579,15 +579,16 @@ struct swlib_scan_arg {
 
 static int
 add_port_map(struct switch_dev *dev, struct nlattr *nla)
-{
+{//DD need to understand what's the map is
 	struct nlattr *p;
 	int err = 0, idx = 0;
 	int remaining;
 
-	dev->maps = malloc(sizeof(struct switch_portmap) * dev->ports);
+	dev->maps = malloc(sizeof(struct switch_portmap) * dev->ports); //DD assign buffer to maps
 	if (!dev->maps)
 		return -1;
-	memset(dev->maps, 0, sizeof(struct switch_portmap) * dev->ports);
+	memset(dev->maps, 0, sizeof(struct switch_portmap) * dev->ports);//DD each port one maps slot. 
+    //DD and save segment and virt.. what's the use case?	    
 
 	nla_for_each_nested(p, nla, remaining) {
 		struct nlattr *tb[SWITCH_PORTMAP_MAX+1];
@@ -633,7 +634,7 @@ add_switch(struct nl_msg *msg, void *arg)
 	if (sa->name && (strcmp(name, sa->name) != 0) && (strcmp(alias, sa->name) != 0))
 		goto done;
 
-	dev = swlib_alloc(sizeof(struct switch_dev));
+	dev = swlib_alloc(sizeof(struct switch_dev)); //DD alloc one dev to store memory.
 	if (!dev)
 		goto done;
 
@@ -733,7 +734,7 @@ swlib_connect(const char *name)
 	arg.head = NULL;
 	arg.ptr = NULL;
 	arg.name = name;
-	swlib_call(SWITCH_CMD_GET_SWITCH, add_switch, NULL, &arg);
+	swlib_call(SWITCH_CMD_GET_SWITCH, add_switch, NULL, &arg); //DD get switch, previous, list_switch(), now, add_switch
 
 	if (!refcount)
 		swlib_priv_free();

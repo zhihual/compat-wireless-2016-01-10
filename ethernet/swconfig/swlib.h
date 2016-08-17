@@ -121,10 +121,10 @@ struct switch_dev {
 	int ports;
 	int vlans;
 	int cpu_port;
-	struct switch_attr *ops;
+	struct switch_attr *ops; //DD type..
 	struct switch_attr *port_ops;
 	struct switch_attr *vlan_ops;
-	struct switch_portmap *maps;
+	struct switch_portmap *maps; //DD all are pointers..
 	struct switch_dev *next;
 	void *priv;
 };

@@ -443,10 +443,10 @@ device_get(const char *name, int create)
 {
 	struct device *dev;
 
-	if (strchr(name, '.'))
+	if (strchr(name, '.')) //DD found the name has one dot..
 		return get_vlan_device_chain(name, create);
 
-	if (name[0] == '@')
+	if (name[0] == '@') //DD get alias
 		return device_alias_get(name + 1);
 
 	dev = avl_find_element(&devices, name, dev, avl);
@@ -753,7 +753,7 @@ device_reset_config(void)
 	struct device *dev;
 
 	avl_for_each_element(&devices, dev, avl)
-		dev->current_config = false;
+		dev->current_config = false; //DD link layer device is one list link
 }
 
 void
@@ -814,11 +814,11 @@ device_set_default_ps(bool state)
 struct device *
 device_create(const char *name, const struct device_type *type,
 	      struct blob_attr *config)
-{
+{//DD deive...
 	struct device *odev = NULL, *dev;
 	enum dev_change_type change;
 
-	odev = device_get(name, false);
+	odev = device_get(name, false); //DD not create 
 	if (odev) {
 		odev->current_config = true;
 		change = device_apply_config(odev, type, config);

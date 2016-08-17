@@ -915,5 +915,6 @@ void proto_shell_init(void)
 	if (proto_fd < 0)
 		return;
 
+    //DD it looks search protocal handler...
 	netifd_init_script_handlers(proto_fd, proto_shell_add_handler);
 }

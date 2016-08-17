@@ -1145,17 +1145,19 @@ static struct ubus_object wireless_object = {
 int
 netifd_ubus_init(const char *path)
 {
-	uloop_init();
+	uloop_init();//DD here is ulopp init...
 	ubus_path = path;
 
 	ubus_ctx = ubus_connect(path);
 	if (!ubus_ctx)
 		return -EIO;
 
-	DPRINTF("connected as %08x\n", ubus_ctx->local_id);
+	DPRINTF("connected as %08x\n", ubus_ctx->local_id); //DD hook up with ubus
 	ubus_ctx->connection_lost = netifd_ubus_connection_lost;
 	netifd_ubus_add_fd();
 
+
+    //DD hook up interface to ubus...
 	netifd_add_object(&main_object);
 	netifd_add_object(&dev_object);
 	netifd_add_object(&wireless_object);

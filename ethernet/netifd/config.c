@@ -170,19 +170,19 @@ config_init_devices(void)
 
 		type = uci_lookup_option_string(uci_ctx, s, "type");
 		if (type) {
-			if (!strcmp(type, "8021ad"))
-				devtype = &vlandev_device_type;
-			else if (!strcmp(type, "8021q"))
-				devtype = &vlandev_device_type;
+			if (!strcmp(type, "8021ad")) 
+				devtype = &vlandev_device_type; //DD vlan
+			else if (!strcmp(type, "8021q"))   
+				devtype = &vlandev_device_type; //DD vlan
 			else if (!strcmp(type, "bridge"))
-				devtype = &bridge_device_type;
+				devtype = &bridge_device_type; //DD bridge
 			else if (!strcmp(type, "macvlan"))
-				devtype = &macvlan_device_type;
+				devtype = &macvlan_device_type; //DD mac vlan shen mo gui... 
 			else if (!strcmp(type, "tunnel"))
-				devtype = &tunnel_device_type;
+				devtype = &tunnel_device_type; //DD ip tunnel..
 		}
 
-		if (devtype)
+		if (devtype) //DD identify device types, and fetch parameters..
 			params = devtype->config_params;
 		if (!params)
 			params = simple_device_type.config_params;
@@ -190,11 +190,11 @@ config_init_devices(void)
 		blob_buf_init(&b, 0);
 		uci_to_blob(&b, s, params);
 		if (devtype) {
-			dev = device_create(name, devtype, b.head);
+			dev = device_create(name, devtype, b.head); //DD nani? go strige to create device
 			if (!dev)
 				continue;
 		} else {
-			dev = device_get(name, 1);
+			dev = device_get(name, 1); //DD is it for virtual??
 			if (!dev)
 				continue;
 
@@ -411,10 +411,11 @@ config_init_all(void)
 
 	vlist_update(&interfaces);
 	config_init = true;
-	device_lock();
+	device_lock(); 
+    //DD Get ethernet/wireless settings..
 
 	device_reset_config();
-	config_init_devices();
+	config_init_devices(); //DD device ...
 	config_init_interfaces();
 	config_init_routes();
 	config_init_rules();
@@ -424,7 +425,7 @@ config_init_all(void)
 	config_init = false;
 	device_unlock();
 
-	device_reset_old();
+	device_reset_old(); //DD reset
 	device_init_pending();
 	vlist_flush(&interfaces);
 	device_free_unused(NULL);

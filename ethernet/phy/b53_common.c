@@ -184,7 +184,7 @@ static int b53_do_vlan_op(struct b53_device *dev, u8 op)
 
 static void b53_set_vlan_entry(struct b53_device *dev, u16 vid, u16 members,
 			       u16 untag)
-{
+{//DD is here to program vlan entry table...
 	if (is5325(dev)) {
 		u32 entry = 0;
 
@@ -415,7 +415,7 @@ static void b53_enable_mib(struct b53_device *dev)
 	b53_write8(dev, B53_MGMT_PAGE, B53_GLOBAL_CONFIG, gc);
 }
 
-static int b53_apply(struct b53_device *dev)
+static int b53_apply(struct b53_device *dev)//DD this is the holly shit function
 {
 	int i;
 
@@ -430,7 +430,7 @@ static int b53_apply(struct b53_device *dev)
 	b53_enable_vlan(dev, dev->enable_vlan);
 
 	/* fill VLAN table */
-	if (dev->enable_vlan) {
+	if (dev->enable_vlan) {//DD yes, set vlan table..
 		for (i = 0; i < dev->sw_dev.vlans; i++) {
 			struct b53_vlan *vlan = &dev->vlans[i];
 

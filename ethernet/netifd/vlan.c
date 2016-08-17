@@ -155,22 +155,22 @@ struct device *get_vlan_device_chain(const char *ifname, bool create)
 	char *buf, *s, *next, *err = NULL;
 	int id;
 
-	buf = strdup(ifname);
+	buf = strdup(ifname); //DD copy
 	if (!buf)
 		return NULL;
 
-	s = split_vlan(buf);
-	dev = device_get(buf, create);
+	s = split_vlan(buf); //DD get eth0...
+	dev = device_get(buf, create); 
 	if (!dev)
 		goto error;
 
 	do {
 		next = split_vlan(s);
-		id = strtoul(s, &err, 10);
+		id = strtoul(s, &err, 10);//DD get id...
 		if (err && *err)
 			goto error;
 
-		dev = get_vlan_device(dev, id, create);
+		dev = get_vlan_device(dev, id, create); //DD get vlan device.....
 		if (!dev)
 			goto error;
 
