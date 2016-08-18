@@ -846,7 +846,7 @@ static bool __interface_add(struct interface *iface, struct blob_attr *config, b
 	}
 
 	iface->config = config;
-	vlist_add(&interfaces, &iface->node, iface->name);
+	vlist_add(&interfaces, &iface->node, iface->name);//DD posible here to add interface
 	return true;
 }
 

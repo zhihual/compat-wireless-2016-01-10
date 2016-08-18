@@ -83,8 +83,8 @@ const struct device_type bridge_device_type = {
 };
 
 struct bridge_state {
-	struct device dev;
-	device_state_cb set_state;
+	struct device dev; //DD device
+	device_state_cb set_state; 
 
 	struct blob_attr *config_data;
 	struct bridge_config config;
@@ -93,7 +93,7 @@ struct bridge_state {
 	bool force_active;
 
 	struct uloop_timeout retry;
-	struct bridge_member *primary_port;
+	struct bridge_member *primary_port; //DD port??
 	struct vlist_tree members;
 	int n_present;
 	int n_failed;
@@ -101,8 +101,8 @@ struct bridge_state {
 
 struct bridge_member {
 	struct vlist_node node;
-	struct bridge_state *bst;
-	struct device_user dev;
+	struct bridge_state *bst;//DD pointer back..
+	struct device_user dev; //DD ??
 	bool present;
 	char name[];
 };
@@ -376,9 +376,9 @@ bridge_set_state(struct device *dev, bool up)
 	bst = container_of(dev, struct bridge_state, dev);
 
 	if (up)
-		return bridge_set_up(bst);
+		return bridge_set_up(bst); //DD up
 	else
-		return bridge_set_down(bst);
+		return bridge_set_down(bst); //DD down
 }
 
 static struct bridge_member *
@@ -519,7 +519,7 @@ bridge_dump_info(struct device *dev, struct blob_buf *b)
 
 static void
 bridge_config_init(struct device *dev)
-{
+{//DD believe should comes here..
 	struct bridge_state *bst;
 	struct blob_attr *cur;
 	int rem;
@@ -614,11 +614,11 @@ bridge_reload(struct device *dev, struct blob_attr *attr)
 	blobmsg_parse(bridge_attrs, __BRIDGE_ATTR_MAX, tb_br,
 		blob_data(attr), blob_len(attr));
 
-	bst->ifnames = tb_br[BRIDGE_ATTR_IFNAME];
-	device_init_settings(dev, tb_dev);
-	bridge_apply_settings(bst, tb_br);
+	bst->ifnames = tb_br[BRIDGE_ATTR_IFNAME];//DD give name to bst
+	device_init_settings(dev, tb_dev); //DD device property, just get device settings....
+	bridge_apply_settings(bst, tb_br); //DD br property
 
-	if (bst->config_data) {
+	if (bst->config_data) {//DD need care of config_data.. should not comes here at first.  set value in below time.
 		struct blob_attr *otb_dev[__DEV_ATTR_MAX];
 		struct blob_attr *otb_br[__BRIDGE_ATTR_MAX];
 
@@ -641,7 +641,7 @@ bridge_reload(struct device *dev, struct blob_attr *attr)
 		bridge_config_init(dev);
 	}
 
-	free(bst->config_data);
+	free(bst->config_data);//DD why free here?  
 	bst->config_data = attr;
 	return ret;
 }
@@ -667,28 +667,28 @@ bridge_retry_members(struct uloop_timeout *timeout)
 }
 
 static struct device *
-bridge_create(const char *name, struct blob_attr *attr)
+bridge_create(const char *name, struct blob_attr *attr) //DD netifd comes here first. during parser configuration files..
 {
 	struct bridge_state *bst;
 	struct device *dev = NULL;
 
-	bst = calloc(1, sizeof(*bst));
+	bst = calloc(1, sizeof(*bst));//DD init memory to zero...
 	if (!bst)
 		return NULL;
 
 	dev = &bst->dev;
-	device_init(dev, &bridge_device_type, name);
-	dev->config_pending = true;
-	bst->retry.cb = bridge_retry_members;
+	device_init(dev, &bridge_device_type, name);//DD 先搞device创建，传递指针
+	dev->config_pending = true;//DD pending, that's why eth0.1 comes from.
+	bst->retry.cb = bridge_retry_members; //DD, this should be critical callback.
 
-	bst->set_state = dev->set_state;
-	dev->set_state = bridge_set_state;
+	bst->set_state = dev->set_state; //DD set dev default call back.
+	dev->set_state = bridge_set_state; //DD this is bridge state.
 
-	dev->hotplug_ops = &bridge_ops;
+	dev->hotplug_ops = &bridge_ops; //DD pnp
 
-	vlist_init(&bst->members, avl_strcmp, bridge_member_update);
+	vlist_init(&bst->members, avl_strcmp, bridge_member_update); //DD member.
 	bst->members.keep_old = true;
-	bridge_reload(dev, attr);
+	bridge_reload(dev, attr);//DD reload...
 
 	return dev;
 }

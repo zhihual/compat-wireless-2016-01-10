@@ -62,7 +62,7 @@ config_parse_bridge_interface(struct uci_section *s)
 	blobmsg_add_string(&b, "name", name);
 
 	uci_to_blob(&b, s, bridge_device_type.config_params);
-	if (!device_create(name, &bridge_device_type, b.head)) {
+	if (!device_create(name, &bridge_device_type, b.head)) { //DD calling to create bridge.
 		D(INTERFACE, "Failed to create bridge for interface '%s'\n", s->e.name);
 		return -EINVAL;
 	}
@@ -81,23 +81,23 @@ config_parse_interface(struct uci_section *s, bool alias)
 	bool bridge = false;
 
 	disabled = uci_lookup_option_string(uci_ctx, s, "disabled");
-	if (disabled && !strcmp(disabled, "1"))
+	if (disabled && !strcmp(disabled, "1")) //DD if disable, then return. nice...
 		return;
 
 	blob_buf_init(&b, 0);
 
 	if (!alias)
 		type = uci_lookup_option_string(uci_ctx, s, "type");
-	if (type && !strcmp(type, "bridge")) {
+	if (type && !strcmp(type, "bridge")) {  //DD if bridge, then good...
 		if (config_parse_bridge_interface(s))
 			return;
-
+        //DD oh?? , success is zero, continues go down...
 		bridge = true;
 	}
 
 	uci_to_blob(&b, s, &interface_attr_list);
 
-	iface = interface_alloc(s->e.name, b.head);
+	iface = interface_alloc(s->e.name, b.head); //DD allocate one interface..
 	if (!iface)
 		return;
 
@@ -115,7 +115,7 @@ config_parse_interface(struct uci_section *s, bool alias)
 		if (!interface_add_alias(iface, config))
 			goto error_free_config;
 	} else {
-		interface_add(iface, config);
+		interface_add(iface, config);//DD add interface....
 	}
 	return;
 
@@ -242,7 +242,7 @@ config_init_interfaces(void)
 	uci_foreach_element(&uci_network->sections, e) {
 		struct uci_section *s = uci_to_section(e);
 
-		if (!strcmp(s->type, "interface"))
+		if (!strcmp(s->type, "interface")) //DD only check interface here..
 			config_parse_interface(s, false);
 	}
 

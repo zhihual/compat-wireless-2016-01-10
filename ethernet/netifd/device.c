@@ -80,10 +80,10 @@ static int set_device_state(struct device *dev, bool state)
 		if (!dev->ifindex)
 			return -1;
 
-		system_if_up(dev);
+		system_if_up(dev); //DD up or down device
 	}
 	else
-		system_if_down(dev);
+		system_if_down(dev); //DD up or down device..
 
 	return 0;
 }
@@ -396,18 +396,18 @@ void device_init_virtual(struct device *dev, const struct device_type *type, con
 	dev->type = type;
 
 	if (!dev->set_state)
-		dev->set_state = set_device_state;
+		dev->set_state = set_device_state; //DD set_device_state 这是个全局函数
 }
 
 int device_init(struct device *dev, const struct device_type *type, const char *ifname)
 {
 	int ret;
 
-	device_init_virtual(dev, type, ifname);
+	device_init_virtual(dev, type, ifname); //DD 注意，是bridge 在三层的表现
 
 	dev->avl.key = dev->ifname;
 
-	ret = avl_insert(&devices, &dev->avl);
+	ret = avl_insert(&devices, &dev->avl); //DD 加入avl list
 	if (ret < 0)
 		return ret;
 
@@ -500,7 +500,7 @@ static void __device_set_present(struct device *dev, bool state)
 		return;
 
 	dev->present = state;
-	device_broadcast_event(dev, state ? DEV_EVENT_ADD : DEV_EVENT_REMOVE);
+	device_broadcast_event(dev, state ? DEV_EVENT_ADD : DEV_EVENT_REMOVE);//DD brocast message.
 }
 
 void
@@ -540,8 +540,8 @@ void device_set_ifindex(struct device *dev, int ifindex)
 	if (dev->ifindex == ifindex)
 		return;
 
-	dev->ifindex = ifindex;
-	device_broadcast_event(dev, DEV_EVENT_UPDATE_IFINDEX);
+	dev->ifindex = ifindex; //DD set dev ifindex, but not sure not exist interface...
+	device_broadcast_event(dev, DEV_EVENT_UPDATE_IFINDEX);//DD 广而告之
 }
 
 static int device_refcount(struct device *dev)
@@ -837,7 +837,7 @@ device_create(const char *name, const struct device_type *type,
 	if (!config)
 		return NULL;
 
-	dev = type->create(name, config);
+	dev = type->create(name, config); //DD en, from log, code run to here...
 	if (!dev)
 		return NULL;
 
@@ -846,8 +846,8 @@ device_create(const char *name, const struct device_type *type,
 	if (odev)
 		device_replace(dev, odev);
 
-	if (!config_init && dev->config_pending) {
-		type->config_init(dev);
+	if (!config_init && dev->config_pending) { //DD ahead already set config_init = true. so, it skipped here..
+		type->config_init(dev); //DD looks bridge not call init directly. find detail more...
 		dev->config_pending = false;
 	}
 

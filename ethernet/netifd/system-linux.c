@@ -542,7 +542,10 @@ static bool system_is_bridge(const char *name, char *buf, int buflen)
 
 	snprintf(buf, buflen, "/sys/devices/virtual/net/%s/bridge", name);
 	if (stat(buf, &st) < 0)
-		return false;
+        return false;
+    /*
+      find file, if find, return 0. not return -1
+    */
 
 	return true;
 }
@@ -805,25 +808,25 @@ void system_if_clear_state(struct device *dev)
 	if (dev->external || !dev->ifindex)
 		return;
 
-	system_if_flags(dev->ifname, 0, IFF_UP);
+	system_if_flags(dev->ifname, 0, IFF_UP);//DD 0 is add flag,  IFF_UP is removing flags.
 
 	if (system_is_bridge(dev->ifname, buf, sizeof(buf))) {
 		D(SYSTEM, "Delete existing bridge named '%s'\n", dev->ifname);
-		system_bridge_delbr(dev);
+		system_bridge_delbr(dev);//DD if already exist, del it.
 		return;
 	}
 
 	bridge = system_get_bridge(dev->ifname, buf, sizeof(buf));
 	if (bridge) {
 		D(SYSTEM, "Remove device '%s' from bridge '%s'\n", dev->ifname, bridge);
-		system_bridge_if(bridge, dev, SIOCBRDELIF, NULL);
+		system_bridge_if(bridge, dev, SIOCBRDELIF, NULL);//DD remove interface... even I don't know what is?
 	}
 
 	system_if_clear_entries(dev, RTM_GETROUTE, AF_INET);
 	system_if_clear_entries(dev, RTM_GETADDR, AF_INET);
 	system_if_clear_entries(dev, RTM_GETROUTE, AF_INET6);
 	system_if_clear_entries(dev, RTM_GETADDR, AF_INET6);
-	system_set_disable_ipv6(dev, "0");
+	system_set_disable_ipv6(dev, "0"); //DD lost, don't know what's happening, but, remark here, since it obviously some remove beheavior.
 }
 
 static inline unsigned long
@@ -1281,7 +1284,7 @@ static int cb_if_check_error(struct sockaddr_nl *nla, struct nlmsgerr *err, void
 	return NL_STOP;
 }
 
-int system_if_check(struct device *dev)
+int system_if_check(struct device *dev)//DD most device type not create this callback, so, allmost comes to here.
 {
 	struct nl_cb *cb = nl_cb_alloc(NL_CB_DEFAULT);
 	struct nl_msg *msg;
