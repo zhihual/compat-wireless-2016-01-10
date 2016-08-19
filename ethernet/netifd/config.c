@@ -115,7 +115,7 @@ config_parse_interface(struct uci_section *s, bool alias)
 		if (!interface_add_alias(iface, config))
 			goto error_free_config;
 	} else {
-		interface_add(iface, config);//DD add interface....
+		interface_add(iface, config);//DD add interface.... give configration to iface
 	}
 	return;
 
@@ -365,7 +365,7 @@ config_init_wireless(void)
 		if (strcmp(s->type, "wifi-device") != 0)
 			continue;
 
-		config_parse_wireless_device(s);
+		config_parse_wireless_device(s);//DD confige device
 	}
 
 	vlist_flush(&wireless_devices);
@@ -391,7 +391,7 @@ config_init_wireless(void)
 			continue;
 		}
 
-		config_parse_wireless_interface(wdev, s);
+		config_parse_wireless_interface(wdev, s); //DD config wireless
 	}
 
 	vlist_for_each_element(&wireless_devices, wdev, node)
@@ -401,13 +401,13 @@ config_init_wireless(void)
 void
 config_init_all(void)
 {
-	uci_network = config_init_package("network");
+	uci_network = config_init_package("network"); //DD this is load network config file
 	if (!uci_network) {
 		fprintf(stderr, "Failed to load network config\n");
 		return;
 	}
 
-	uci_wireless = config_init_package("wireless");
+	uci_wireless = config_init_package("wireless");//DD this is load wireless config file
 
 	vlist_update(&interfaces);
 	config_init = true;
@@ -415,8 +415,8 @@ config_init_all(void)
     //DD Get ethernet/wireless settings..
 
 	device_reset_config();
-	config_init_devices(); //DD device ...
-	config_init_interfaces();
+	config_init_devices(); //DD device ... no call in from log..
+	config_init_interfaces();//DD .
 	config_init_routes();
 	config_init_rules();
 	config_init_globals();

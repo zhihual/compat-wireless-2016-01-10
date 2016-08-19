@@ -562,7 +562,7 @@ interface_claim_device(struct interface *iface)
 		interface_add_user(&iface->parent_iface, parent);
 	} else if (iface->ifname &&
 		!(iface->proto_handler->flags & PROTO_FLAG_NODEV)) {
-		dev = device_get(iface->ifname, true);
+		dev = device_get(iface->ifname, true);//DD first run here..
 		interface_set_device_config(iface, dev);
 	} else {
 		dev = iface->ext_dev.dev;
@@ -705,7 +705,7 @@ void interface_set_proto_state(struct interface *iface, struct interface_proto_s
 		iface->proto->free(iface->proto);
 		iface->proto = NULL;
 	}
-	iface->state = IFS_DOWN;
+	iface->state = IFS_DOWN; //DD set state to IFS_DOWN...
 	iface->proto = state;
 	if (!state)
 		return;
@@ -724,7 +724,7 @@ interface_alloc(const char *name, struct blob_attr *config)
 	char *iface_name;
 	bool force_link = false;
 
-	iface = calloc_a(sizeof(*iface), &iface_name, strlen(name) + 1);
+	iface = calloc_a(sizeof(*iface), &iface_name, strlen(name) + 1);//DD iface.
 	iface->name = strcpy(iface_name, name);
 	INIT_LIST_HEAD(&iface->errors);
 	INIT_LIST_HEAD(&iface->users);
@@ -1207,7 +1207,7 @@ interface_update(struct vlist_tree *tree, struct vlist_node *node_new,
 		set_config_state(if_old, IFC_REMOVE);
 	} else if (node_new) {
 		D(INTERFACE, "Create interface '%s'\n", if_new->name);
-		proto_init_interface(if_new, if_new->config);
+		proto_init_interface(if_new, if_new->config); //DD 
 		interface_claim_device(if_new);
 		netifd_ubus_add_interface(if_new);
 	}

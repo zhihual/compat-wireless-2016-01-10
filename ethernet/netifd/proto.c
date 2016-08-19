@@ -572,7 +572,7 @@ proto_init_interface(struct interface *iface, struct blob_attr *attr)
 	if (!proto)
 		proto = &no_proto;
 
-	state = proto->attach(proto, iface, attr);
+	state = proto->attach(proto, iface, attr);//DD attention 
 	if (!state) {
 		state = no_proto.attach(&no_proto, iface, attr);
 		state->cb = invalid_proto_handler;

@@ -391,7 +391,7 @@ bridge_create_member(struct bridge_state *bst, struct device *dev, bool hotplug)
 		return NULL;
 
 	bm->bst = bst;
-	bm->dev.cb = bridge_member_cb;
+	bm->dev.cb = bridge_member_cb; //DD bridge member
 	bm->dev.hotplug = hotplug;
 	strcpy(bm->name, dev->ifname);
 	bm->dev.dev = dev;
@@ -535,7 +535,7 @@ bridge_config_init(struct device *dev)
 	vlist_update(&bst->members);
 	if (bst->ifnames) {
 		blobmsg_for_each_attr(cur, bst->ifnames, rem) {
-			bridge_add_member(bst, blobmsg_data(cur));
+			bridge_add_member(bst, blobmsg_data(cur)); //DD code goes here..
 		}
 	}
 	vlist_flush(&bst->members);

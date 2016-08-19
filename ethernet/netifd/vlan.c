@@ -117,9 +117,9 @@ static struct device *get_vlan_device(struct device *dev, int id, bool create)
 	if (!create)
 		return NULL;
 
-	D(DEVICE, "Create vlan device '%s.%d'\n", dev->ifname, id);
+	D(DEVICE, "Create vlan device '%s.%d'\n", dev->ifname, id);//DD base on eth0... id is 1..
 
-	vldev = calloc(1, sizeof(*vldev));
+	vldev = calloc(1, sizeof(*vldev));//DD give it vlan, and vlan has it's name
 
 	vldev->id = id;
 	vlan_dev_set_name(vldev, dev);
@@ -127,8 +127,8 @@ static struct device *get_vlan_device(struct device *dev, int id, bool create)
 	device_init(&vldev->dev, &vlan_type, vldev->dev.ifname);
 	vldev->dev.default_config = true;
 
-	vldev->set_state = vldev->dev.set_state;
-	vldev->dev.set_state = vlan_set_device_state;
+	vldev->set_state = vldev->dev.set_state; //DD recorad default check
+	vldev->dev.set_state = vlan_set_device_state; //DD hook vlan special set state
 
 	vldev->dep.cb = vlan_dev_cb;
 	device_add_user(&vldev->dep, dev);

@@ -428,7 +428,7 @@ device_create_default(const char *name, bool external)
 		return NULL;
 
 	D(DEVICE, "Create simple device '%s'\n", name);
-	dev = calloc(1, sizeof(*dev));
+	dev = calloc(1, sizeof(*dev)); //DD allocate one device
 	dev->external = external;
 	dev->set_state = simple_device_set_state;
 	device_init(dev, &simple_device_type, name);
@@ -563,17 +563,17 @@ __device_add_user(struct device_user *dep, struct device *dev)
 {
 	struct safe_list *head;
 
-	dep->dev = dev;
+	dep->dev = dev; //DD tell vlan, your dev is depend on this faterther device..
 
 	if (dep->alias)
 		head = &dev->aliases;
 	else
 		head = &dev->users;
 
-	safe_list_add(&dep->list, head);
+	safe_list_add(&dep->list, head); //DD add mark your self as reference for father device
 	D(DEVICE, "Add user for device '%s', refcount=%d\n", dev->ifname, device_refcount(dev));
 
-	if (dep->cb && dev->present) {
+	if (dep->cb && dev->present) { //DD make callback for this
 		dep->cb(dep, DEV_EVENT_ADD);
 		if (dev->active)
 			dep->cb(dep, DEV_EVENT_UP);
