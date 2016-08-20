@@ -36,7 +36,7 @@ static void free_vlan_if(struct device *iface)
 	free(vldev);
 }
 
-static int vlan_set_device_state(struct device *dev, bool up)
+static int vlan_set_device_state(struct device *dev, bool up)//DD key area to enable vlan..
 {
 	struct vlan_device *vldev;
 	int ret = 0;

@@ -383,7 +383,7 @@ bridge_set_state(struct device *dev, bool up)
 
 static struct bridge_member *
 bridge_create_member(struct bridge_state *bst, struct device *dev, bool hotplug)
-{
+{//DD this indicate whether comes from hotplug.
 	struct bridge_member *bm;
 
 	bm = calloc(1, sizeof(*bm) + strlen(dev->ifname) + 1);
@@ -391,11 +391,11 @@ bridge_create_member(struct bridge_state *bst, struct device *dev, bool hotplug)
 		return NULL;
 
 	bm->bst = bst;
-	bm->dev.cb = bridge_member_cb; //DD bridge member
-	bm->dev.hotplug = hotplug;
+	bm->dev.cb = bridge_member_cb; //DD bridge member's callback
+	bm->dev.hotplug = hotplug;//DD whether hotplug
 	strcpy(bm->name, dev->ifname);
-	bm->dev.dev = dev;
-	vlist_add(&bst->members, &bm->node, bm->name);
+	bm->dev.dev = dev;//DD should be vlan device..
+	vlist_add(&bst->members, &bm->node, bm->name);//DD 
 	// Need to look up the bridge member again as the above
 	// created pointer will be freed in case the bridge member
 	// already existed
